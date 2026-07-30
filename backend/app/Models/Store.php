@@ -14,6 +14,7 @@ class Store extends Model
         'name',
         'owner_name',
         'slug',
+        'subdomain',
         'logo',
         'currency',
         'description',

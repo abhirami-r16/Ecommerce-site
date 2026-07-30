@@ -85,7 +85,7 @@ export default function AdminLayout() {
           <div className="topbar-right-actions d-flex align-items-center gap-3">
             {/* View Store Button */}
             <a
-              href={`http://${activeStore?.name?.toLowerCase().replace(/\s+/g, '') || 'teststore1'}.localhost:3000`}
+              href={`http://${activeStore?.name?.toLowerCase().replace(/\s+/g, '') || 'teststore1'}.localhost${window.location.port ? ':' + window.location.port : ''}`}
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn-sm d-flex align-items-center gap-2 px-3 py-1.5 rounded-pill text-white border"

@@ -848,13 +848,7 @@ export default function CustomerDashboard() {
               )}
             </button>
 
-            {/* Customer Avatar */}
-            <div className="d-flex align-items-center gap-2 px-3 py-1.5 rounded-pill border" style={{ backgroundColor: '#14120e', borderColor: 'rgba(212,175,55,0.3)' }}>
-              <div className="w-6 h-6 rounded-circle d-flex align-items-center justify-content-center font-bold fs-8" style={{ background: 'linear-gradient(135deg, #f3d675, #d4af37)', color: '#050505' }}>
-                {profileData.name.charAt(0)}
-              </div>
-              <span className="fs-8 font-semibold gold-gradient-text d-none d-sm-inline">{profileData.name}</span>
-            </div>
+            {/* Customer Avatar Removed As Requested */}
 
             <button onClick={handleLogout} className="btn btn-sm btn-outline-danger d-none d-sm-flex align-items-center gap-1 fs-8">
               <LogOut size={14} /> Exit

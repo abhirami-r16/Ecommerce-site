@@ -70,22 +70,38 @@ export const AuthProvider = ({ children }) => {
       const isDemo = !email || normalizedEmail.includes('@shopnest.local') || normalizedEmail.includes('admin') || normalizedEmail.includes('owner') || normalizedEmail.includes('customer');
       const role = normalizedEmail.includes('customer') ? 'customer' : normalizedEmail.includes('admin') ? 'admin' : 'owner';
       let existingName = null;
+      let existingRole = role;
+      let existingPassword = null;
       try {
-        const saved = localStorage.getItem('shopnest_user');
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (parsed && parsed.name && (!email || (parsed.email && parsed.email.toLowerCase().trim() === normalizedEmail))) {
-            existingName = parsed.name;
+        const registeredUsers = JSON.parse(localStorage.getItem('aureum_registered_users') || '{}');
+        if (registeredUsers[normalizedEmail]) {
+          existingName = registeredUsers[normalizedEmail].name;
+          existingRole = registeredUsers[normalizedEmail].role;
+          existingPassword = registeredUsers[normalizedEmail].password;
+        } else {
+          // Fallback to checking the current logged in session if any
+          const saved = localStorage.getItem('shopnest_user');
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed && parsed.name && (!email || (parsed.email && parsed.email.toLowerCase().trim() === normalizedEmail))) {
+              existingName = parsed.name;
+              existingRole = parsed.role || role;
+            }
           }
         }
       } catch (e) {}
 
       const fallbackUser = {
         id: getStableUserId(normalizedEmail, 1),
-        name: existingName || (role === 'owner' ? 'Store Manager' : role === 'customer' ? 'Sarah Miller' : 'Sarah J.'),
+        name: existingName || (existingRole === 'owner' ? 'Store Manager' : existingRole === 'customer' ? 'Sarah Miller' : 'Sarah J.'),
         email: normalizedEmail || 'sarah@margasstore.com',
-        role,
+        role: existingRole,
       };
+
+      // Mock Password Validation
+      if (existingPassword && existingPassword !== password) {
+        return { success: false, message: 'Incorrect password for this email address.' };
+      }
 
       if (isDemo || !err.response || err.response?.status === 401) {
         const demoToken = 'demo-token-' + Date.now();
@@ -118,12 +134,21 @@ export const AuthProvider = ({ children }) => {
         name: name || 'Aureum User',
         email: email || 'user@aureum.local',
         role,
+        password: password, // Save password for local validation
         stores: role === 'owner' ? [{
           id: getStableUserId(normalizedEmail, 1) + 1,
           name: storeName || `${name}'s Store`,
           owner_name: name,
         }] : [],
       };
+      
+      // Persist to a mock database in localStorage so it survives logout
+      try {
+        const existingUsers = JSON.parse(localStorage.getItem('aureum_registered_users') || '{}');
+        existingUsers[normalizedEmail] = newUser;
+        localStorage.setItem('aureum_registered_users', JSON.stringify(existingUsers));
+      } catch (e) {}
+
       const newToken = 'demo-token-' + Date.now();
       localStorage.setItem('shopnest_token', newToken);
       localStorage.setItem('shopnest_user', JSON.stringify(newUser));

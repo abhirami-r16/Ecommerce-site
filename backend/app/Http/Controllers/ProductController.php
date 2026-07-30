@@ -43,35 +43,56 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'store_id' => 'required|exists:stores,id',
-            'category_id' => 'nullable|exists:categories,id',
-            'name' => 'required|string|max:255',
-            'price' => 'required|numeric|min:0',
-            'compare_price' => 'nullable|numeric|min:0',
-            'stock_quantity' => 'required|integer|min:0',
-            'sku' => 'nullable|string|max:100',
-            'description' => 'nullable|string',
-            'image' => 'nullable|string',
-            'is_active' => 'nullable|boolean',
+            'store_id'        => 'nullable|integer',
+            'category_id'     => 'nullable|integer',
+            'name'            => 'required|string|max:255',
+            'price'           => 'required|numeric|min:0',
+            'compare_price'   => 'nullable|numeric|min:0',
+            'stock_quantity'  => 'required|integer|min:0',
+            'sku'             => 'nullable|string|max:100',
+            'description'     => 'nullable|string',
+            'image'           => 'nullable|string',
+            'is_active'       => 'nullable|boolean',
+            'store_name'      => 'nullable|string|max:255',
+            'store_slug'      => 'nullable|string|max:255',
+            'store_subdomain' => 'nullable|string|max:255',
+            'user_id'         => 'nullable|integer',
+            'owner_id'        => 'nullable|integer',
+            'owner_name'      => 'nullable|string|max:255',
+            'owner_email'     => 'nullable|string|max:255',
         ]);
+
+        // Verify store_id actually exists — fall back to null if not found
+        $storeId = null;
+        if (!empty($validated['store_id'])) {
+            $storeExists = \App\Models\Store::where('id', $validated['store_id'])->exists();
+            $storeId = $storeExists ? $validated['store_id'] : null;
+        }
+
+        // Verify category_id actually exists — fall back to null if not found
+        $categoryId = null;
+        if (!empty($validated['category_id'])) {
+            $categoryExists = \App\Models\Category::where('id', $validated['category_id'])->exists();
+            $categoryId = $categoryExists ? $validated['category_id'] : null;
+        }
 
         $sku = $validated['sku'] ?? 'SKU-' . strtoupper(Str::random(6));
         $stock = (int)$validated['stock_quantity'];
         $status = $stock <= 0 ? 'Out of Stock' : ($stock <= 5 ? 'Low Stock' : 'In Stock');
 
         $product = Product::create([
-            'store_id' => $validated['store_id'],
-            'category_id' => $validated['category_id'] ?? null,
-            'name' => $validated['name'],
-            'slug' => Str::slug($validated['name']) . '-' . Str::random(4),
-            'sku' => $sku,
-            'price' => $validated['price'],
-            'compare_price' => $validated['compare_price'] ?? null,
+            'store_id'       => $storeId,
+            'category_id'    => $categoryId,
+            'name'           => $validated['name'],
+            'slug'           => Str::slug($validated['name']) . '-' . Str::random(4),
+            'sku'            => $sku,
+            'price'          => $validated['price'],
+            'compare_price'  => $validated['compare_price'] ?? null,
             'stock_quantity' => $stock,
-            'description' => $validated['description'] ?? '',
-            'image' => $validated['image'] ?? 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&q=80',
-            'status' => $status,
-            'is_active' => $validated['is_active'] ?? true,
+            'description'    => $validated['description'] ?? '',
+            'image'          => $validated['image'] ?? 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&q=80',
+            'status'         => $status,
+            'is_active'      => $validated['is_active'] ?? true,
         ]);
 
         return response()->json($product->load(['category', 'store']), 201);

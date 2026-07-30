@@ -450,15 +450,23 @@ export default function StoreOwnerDashboard() {
     persistOwnerStores(storesList);
   }, [storesList, currentUserId]);
 
+  // Keep shopnest_active_store_id in sync so axios interceptor sends X-Store-Id header
   useEffect(() => {
-    const scopedProducts = productsList.filter((item) => matchesOwnerScope(item));
-    localStorage.setItem("aureum_owner_products", JSON.stringify(scopedProducts));
-  }, [productsList, currentUserId, currentOwnerEmail, activeStore?.id]);
+    if (activeStore?.id) {
+      localStorage.setItem('shopnest_active_store_id', String(activeStore.id));
+    }
+  }, [activeStore?.id]);
 
   useEffect(() => {
-    const scopedCategories = categoriesList.filter((item) => matchesOwnerScope(item));
-    localStorage.setItem("aureum_owner_categories", JSON.stringify(scopedCategories));
-  }, [categoriesList, currentUserId, currentOwnerEmail, activeStore?.id]);
+    const saved = localStorage.getItem("aureum_owner_products");
+    let all = [];
+    if (saved) {
+      try { all = JSON.parse(saved); } catch (e) { }
+    }
+    const outOfScope = all.filter(item => !matchesOwnerScope(item));
+    const scopedProducts = productsList.filter((item) => matchesOwnerScope(item));
+    localStorage.setItem("aureum_owner_products", JSON.stringify([...outOfScope, ...scopedProducts]));
+  }, [productsList, currentUserId, currentOwnerEmail, activeStore?.id]);
 
   useEffect(() => {
     localStorage.setItem("aureum_owner_orders", JSON.stringify(ordersList));
@@ -467,15 +475,17 @@ export default function StoreOwnerDashboard() {
   useEffect(() => {
     const loadBackendStores = async () => {
       try {
-        const response = await api.get('/stores');
-        if (Array.isArray(response.data)) {
-          const filtered = response.data.filter((store) => store.user_id === currentUserId || currentUserId === 1);
+        // Use user_id query param so backend filters directly — more reliable than client-side filtering
+        const response = await api.get(`/stores?user_id=${currentUserId}`);
+        if (Array.isArray(response.data) && response.data.length > 0) {
           const persisted = loadPersistedOwnerStores();
-          const merged = mergeOwnerStores(filtered, persisted);
+          const merged = mergeOwnerStores(response.data, persisted);
           if (merged.length > 0) {
             setStoresList(merged);
             if (!selectedStoreId) {
               setSelectedStoreId(merged[0].id);
+              // Persist the real DB store id for axios interceptor
+              localStorage.setItem('shopnest_active_store_id', String(merged[0].id));
             }
           }
         }
@@ -484,8 +494,11 @@ export default function StoreOwnerDashboard() {
       }
     };
 
-    loadBackendStores();
+    if (currentUserId) {
+      loadBackendStores();
+    }
   }, [currentUserId, selectedStoreId]);
+
 
   useEffect(() => {
     localStorage.setItem("aureum_owner_inventory", JSON.stringify(inventoryList));
@@ -493,30 +506,26 @@ export default function StoreOwnerDashboard() {
 
   useEffect(() => {
     const loadStoreProducts = async () => {
-      if (!currentUserId && !activeStore?.id) return;
+      if (!activeStore?.id) return;
       try {
-        const response = await api.get('/products');
+        // Use store_id query param for precise server-side filtering
+        const response = await api.get(`/products?store_id=${activeStore.id}`);
+        // API already filters by store_id — map all returned products
         const productsPayload = Array.isArray(response.data) ? response.data : [];
-        const ownerStoreIds = new Set((ownerStores || []).map((store) => String(store?.id)).filter(Boolean));
-        const filteredProducts = productsPayload.filter((p) => {
-          const productStoreId = p.store_id ?? p.store?.id;
-          if (!productStoreId) return ownerStoreIds.size === 0;
-          return ownerStoreIds.has(String(productStoreId));
-        });
 
-        if (filteredProducts.length > 0) {
-          setProductsList(filteredProducts.map((p) => ({
+        if (productsPayload.length > 0) {
+          setProductsList(productsPayload.map((p) => ({
             id: p.id,
-            ...ownerMeta,
-            user_id: p.user_id ?? ownerMeta.user_id ?? currentUserId,
-            owner_id: p.owner_id ?? ownerMeta.owner_id ?? currentUserId,
-            owner_name: p.owner_name || ownerMeta.owner_name || "Owner",
-            owner_email: p.owner_email || ownerMeta.owner_email || currentOwnerEmail,
-            owner_role: p.owner_role || ownerMeta.owner_role || "owner",
-            store_id: p.store_id ?? ownerMeta.store_id ?? activeStore?.id ?? null,
-            store_name: p.store?.name || ownerMeta.store_name || activeStore?.name || "Owner Store",
-            store_slug: p.store?.slug || ownerMeta.store_slug || activeStore?.slug || "owner-store",
-            store_subdomain: p.store?.subdomain || ownerMeta.store_subdomain || activeStore?.subdomain || "owner-store",
+            backend_id: p.id,
+            store_id: p.store_id ?? activeStore?.id ?? null,
+            store_name: p.store?.name || activeStore?.name || "Owner Store",
+            store_slug: p.store?.slug || activeStore?.slug || "owner-store",
+            store_subdomain: p.store?.subdomain || activeStore?.subdomain || "owner-store",
+            user_id: p.user_id ?? currentUserId,
+            owner_id: p.user_id ?? currentUserId,
+            owner_name: ownerMeta.owner_name || "Owner",
+            owner_email: ownerMeta.owner_email || currentOwnerEmail,
+            owner_role: ownerMeta.owner_role || "owner",
             name: p.name,
             sku: p.sku || `SKU-${Math.floor(Math.random() * 900 + 100)}`,
             category: p.category?.name || p.category || "Uncategorized",
@@ -525,6 +534,8 @@ export default function StoreOwnerDashboard() {
             status: p.status || (p.stock_quantity > 0 ? "In Stock" : "Out of Stock"),
             image: p.image || getFallbackImageByName(p.name)
           })));
+        } else {
+          setProductsList([]);
         }
       } catch (err) {
         console.debug("Failed to load store products from backend, keeping local data", err);
@@ -532,7 +543,7 @@ export default function StoreOwnerDashboard() {
     };
 
     loadStoreProducts();
-  }, [activeStore?.id, currentUserId, currentOwnerEmail, ownerStores, ownerMeta]);
+  }, [activeStore?.id, currentUserId, currentOwnerEmail, ownerMeta]);
 
   // Filter out dummy example orders
   const realOrders = React.useMemo(() => {
@@ -648,7 +659,9 @@ export default function StoreOwnerDashboard() {
     if (!storeForm.name.trim()) return;
 
     const subdomain = storeForm.subdomain.trim() || storeForm.name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
-    const newStore = {
+
+    // Start with a local placeholder (will be replaced by real DB id on success)
+    const localPlaceholder = {
       id: Date.now(),
       user_id: currentUserId,
       name: storeForm.name.trim(),
@@ -664,37 +677,52 @@ export default function StoreOwnerDashboard() {
       banner: "",
       products_count: 0,
       orders_count: 0,
-      total_revenue: "$0.00"
+      total_revenue: "$0.00",
+      _unsynced: true,
     };
 
-    let createdStore = newStore;
+    let createdStore = localPlaceholder;
+    let savedToDb = false;
+
     try {
       const res = await api.post('/stores', {
-        name: newStore.name,
-        slug: newStore.slug,
-        subdomain: newStore.subdomain,
-        currency: newStore.currency,
-        description: newStore.description
+        name: localPlaceholder.name,
+        slug: localPlaceholder.slug,
+        subdomain: localPlaceholder.subdomain,
+        currency: storeForm.currency,
+        description: localPlaceholder.description,
+        owner_name: user?.name || user?.owner_name || '',
+        user_id: currentUserId,
       });
+
       if (res?.data?.id) {
+        // ✅ Use the real MySQL id — this ensures categories/products can link correctly
         createdStore = {
-          ...newStore,
+          ...localPlaceholder,
           id: res.data.id,
-          slug: res.data.slug || newStore.slug,
-          subdomain: res.data.subdomain || newStore.subdomain,
-          name: res.data.name || newStore.name,
-          email: res.data.email || newStore.email,
-          ownerName: res.data.ownerName || newStore.ownerName,
+          slug: res.data.slug || localPlaceholder.slug,
+          subdomain: res.data.subdomain || res.data.slug || localPlaceholder.subdomain,
+          name: res.data.name || localPlaceholder.name,
+          email: res.data.email || localPlaceholder.email,
+          owner_name: res.data.owner_name || localPlaceholder.owner_name,
+          user_id: res.data.user_id || currentUserId,
+          _unsynced: false,
         };
+        // Persist real store id so axios interceptor sends correct X-Store-Id
+        localStorage.setItem('shopnest_active_store_id', String(res.data.id));
+        savedToDb = true;
       }
     } catch (err) {
-      console.debug("Backend API create store fallback to local state", err);
+      console.error("Backend store creation failed:", err?.response?.data || err.message);
+      showToast(`Store saved locally — will sync when backend is available.`);
     }
 
     setStoresList(prev => [createdStore, ...prev]);
     setSelectedStoreId(createdStore.id);
     setStoreSettings(prev => ({ ...prev, name: createdStore.name, email: createdStore.email }));
-    showToast(`Store "${createdStore.name}" created successfully!`);
+
+    const label = savedToDb ? `Store "${createdStore.name}" created! (ID #${createdStore.id})` : `Store "${createdStore.name}" created locally.`;
+    showToast(label);
     setShowCreateStoreModal(false);
   };
 
@@ -768,24 +796,18 @@ export default function StoreOwnerDashboard() {
   // Fetch Categories and Customers from API on mount
   useEffect(() => {
     const fetchCategories = async () => {
+      if (!activeStore?.id) return;
       try {
-        const res = await api.get('/categories');
-        if (res.data && Array.isArray(res.data) && res.data.length > 0) {
-          const ownerStoreIds = new Set((ownerStores || []).map((store) => String(store?.id)).filter(Boolean));
-          const scopedCategories = res.data.filter((category) => {
-            const categoryStoreId = category?.store_id ?? category?.store?.id;
-            if (!categoryStoreId) return ownerStoreIds.size === 0;
-            return ownerStoreIds.has(String(categoryStoreId));
-          });
-
-          setCategoriesList(scopedCategories.map((category) => ({
+        // Use store_id query param for server-side filtering
+        const res = await api.get(`/categories?store_id=${activeStore.id}`);
+        if (res.data && Array.isArray(res.data)) {
+          // Map backend data and preserve local meta for scoping
+          setCategoriesList(res.data.map((category) => ({
             ...category,
             user_id: currentUserId,
             owner_email: currentOwnerEmail,
             store_id: category.store_id ?? activeStore?.id ?? null,
           })));
-        } else if (!activeStore?.id && currentUserId) {
-          setCategoriesList([]);
         }
       } catch (err) {
         console.debug("API categories unavailable, keeping local categories", err);
@@ -857,25 +879,47 @@ export default function StoreOwnerDashboard() {
     if (!categoryForm.name.trim()) return;
 
     const slug = categoryForm.name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+
+    // Build payload — include subdomain/name so backend can resolve store even if store_id is a local timestamp
     const payload = {
       name: categoryForm.name.trim(),
       description: categoryForm.description.trim(),
       featured: categoryForm.featured,
       slug,
       store_id: activeStore?.id ?? null,
-      user_id: currentUserId,
+      store_subdomain: activeStore?.subdomain || activeStore?.slug || null,
+      store_name: activeStore?.name || null,
     };
 
     if (editingCategory) {
+      let updatedData = { ...editingCategory, ...payload };
       try {
-        await api.put(`/categories/${editingCategory.id}`, payload);
+        const res = await api.put(`/categories/${editingCategory.id}`, payload);
+        if (res.data) {
+          updatedData = {
+            ...editingCategory,
+            ...res.data,
+            // keep local meta so scoping filters work
+            user_id: currentUserId,
+            owner_email: currentOwnerEmail,
+            store_id: res.data.store_id ?? editingCategory.store_id ?? activeStore?.id ?? null,
+          };
+        }
       } catch (err) {
-        console.debug("Backend API update failed, updating local state", err);
+        console.error("Backend API update category failed:", err?.response?.data || err.message);
       }
 
-      setCategoriesList(prev => prev.map(c => c.id === editingCategory.id ? { ...c, ...payload } : c));
-      showToast(`Category "${payload.name}" updated successfully!`);
+      setCategoriesList(prev => {
+        const newList = prev.map(c => c.id === editingCategory.id ? updatedData : c);
+        const saved = localStorage.getItem("aureum_owner_categories");
+        const outOfScope = saved ? JSON.parse(saved).filter((item) => !matchesOwnerScope(item)) : [];
+        const scopedCategories = newList.filter((item) => matchesOwnerScope(item));
+        localStorage.setItem("aureum_owner_categories", JSON.stringify([...outOfScope, ...scopedCategories]));
+        return newList;
+      });
+      showToast(`Collection "${payload.name}" updated successfully!`);
     } else {
+      // Start with a local fallback (uses Date.now() as temp id)
       let createdItem = {
         id: Date.now(),
         ...payload,
@@ -887,15 +931,30 @@ export default function StoreOwnerDashboard() {
 
       try {
         const res = await api.post('/categories', payload);
-        if (res.data) {
-          createdItem = res.data;
+        if (res.data?.id) {
+          // Use the real MySQL id returned by backend
+          createdItem = {
+            ...createdItem,
+            ...res.data,
+            // keep local meta so scoping filters work
+            user_id: currentUserId,
+            owner_email: currentOwnerEmail,
+            store_id: res.data.store_id ?? activeStore?.id ?? null,
+          };
         }
       } catch (err) {
-        console.debug("Backend API create failed, adding to local state", err);
+        console.error("Backend API create category failed:", err?.response?.data || err.message);
       }
 
-      setCategoriesList(prev => [createdItem, ...prev]);
-      showToast(`Category "${payload.name}" created successfully!`);
+      setCategoriesList(prev => {
+        const newList = [createdItem, ...prev];
+        const saved = localStorage.getItem("aureum_owner_categories");
+        const outOfScope = saved ? JSON.parse(saved).filter((item) => !matchesOwnerScope(item)) : [];
+        const scopedCategories = newList.filter((item) => matchesOwnerScope(item));
+        localStorage.setItem("aureum_owner_categories", JSON.stringify([...outOfScope, ...scopedCategories]));
+        return newList;
+      });
+      showToast(`Collection "${payload.name}" created successfully!`);
     }
 
     closeCategoryModal();
@@ -916,7 +975,14 @@ export default function StoreOwnerDashboard() {
       console.debug("Backend API delete failed, removing from local state", err);
     }
 
-    setCategoriesList(prev => prev.filter(c => c.id !== catId));
+    setCategoriesList(prev => {
+      const newList = prev.filter(c => c.id !== catId);
+      const saved = localStorage.getItem("aureum_owner_categories");
+      const outOfScope = saved ? JSON.parse(saved).filter((item) => !matchesOwnerScope(item)) : [];
+      const scopedCategories = newList.filter((item) => matchesOwnerScope(item));
+      localStorage.setItem("aureum_owner_categories", JSON.stringify([...outOfScope, ...scopedCategories]));
+      return newList;
+    });
     setProductsList(prev => prev.map(p => p.category === catName ? { ...p, category: "Uncategorized" } : p));
 
     showToast(`Category "${catName}" deleted successfully!`);
@@ -971,7 +1037,10 @@ export default function StoreOwnerDashboard() {
     const normalizedStock = Number(newProd.stock) || 10;
     const status = normalizedStock > 10 ? "In Stock" : normalizedStock > 0 ? "Low Stock" : "Out of Stock";
     const activeStoreSlug = activeStore?.slug || activeStore?.name?.toLowerCase().replace(/[^a-z0-9]+/g, "-") || '';
-    const category = categoriesList.find((cat) => String(cat.id) === String(newProd.category) || cat.name === newProd.category || cat.slug === newProd.category);
+    const category = categoriesList.find((cat) => {
+      const input = (newProd.category || '').toLowerCase();
+      return String(cat.id) === String(newProd.category) || (cat.name || '').toLowerCase() === input || (cat.slug || '').toLowerCase() === input;
+    });
     const payload = {
       store_id: activeStore?.id ?? editingProduct?.store_id ?? null,
       category_id: category?.id ?? null,
@@ -982,6 +1051,13 @@ export default function StoreOwnerDashboard() {
       description: newProd.description?.trim() || "",
       image: normalizeProductImage(newProd.image, newProd.name),
       is_active: true,
+      store_name: activeStore?.name || ownerMeta.store_name || "Owner Store",
+      store_slug: activeStore?.slug || ownerMeta.store_slug || activeStoreSlug,
+      store_subdomain: activeStore?.subdomain || ownerMeta.store_subdomain || activeStoreSlug,
+      user_id: currentUserId,
+      owner_id: currentUserId,
+      owner_name: user?.name || user?.owner_name || 'Owner',
+      owner_email: currentOwnerEmail || user?.email || '',
     };
 
     const mapProduct = (p) => {
@@ -1130,6 +1206,32 @@ export default function StoreOwnerDashboard() {
             Store Merchant
           </div>
 
+          {/* Active Store Indicator */}
+          {activeStore && (
+            <div
+              className="mx-2 mb-2 px-2 py-2 rounded-3 d-flex align-items-center justify-content-between gap-2"
+              style={{ background: "#ffffff", border: "1px solid #dfe3e8", cursor: "pointer" }}
+              onClick={() => setActive("stores")}
+              title="Click to manage store"
+            >
+              <div className="d-flex align-items-center gap-2 min-w-0">
+                <div
+                  className="rounded-2 d-flex align-items-center justify-content-center flex-shrink-0 fs-8 fw-bold"
+                  style={{ width: 26, height: 26, background: "#e3f5f1", color: "#007f5f", border: "1px solid #c3e9df" }}
+                >
+                  {(activeStore.name || "S").charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0">
+                  <div className="fs-8 fw-bold text-truncate" style={{ color: "#202223", maxWidth: 130 }}>{activeStore.name}</div>
+                  <div className="fs-9 fw-semibold" style={{ color: "#6d7175", fontFamily: "monospace", fontSize: "0.68rem" }}>ID #{activeStore.id}</div>
+                </div>
+              </div>
+              <span style={{ background: "#aee9d1", color: "#007f5f", padding: "1px 6px", borderRadius: "10px", fontSize: "0.65rem", fontWeight: 700, flexShrink: 0 }}>
+                {activeStore.status || "Active"}
+              </span>
+            </div>
+          )}
+
           {/* Nav List */}
           <nav className="d-flex flex-column gap-1">
             {ownerLinks.map((item) => {
@@ -1178,7 +1280,7 @@ export default function StoreOwnerDashboard() {
           </div>
           <div className="d-flex align-items-center gap-3">
             <a
-              href={`http://${activeStore?.name?.toLowerCase().replace(/\s+/g, '') || 'teststore1'}.localhost:3000`}
+              href={`http://${activeStore?.name?.toLowerCase().replace(/\s+/g, '') || 'teststore1'}.localhost${window.location.port ? ':' + window.location.port : ''}`}
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn-sm d-flex align-items-center gap-2 px-3 py-1.5 rounded-pill border fw-bold"
@@ -1333,13 +1435,13 @@ export default function StoreOwnerDashboard() {
                             <td className="border-0 fs-8 fw-medium" style={{ color: "#6d7175" }}>{o.items}</td>
                             <td className="border-0 fw-semibold" style={{ color: "#202223" }}>{o.total}</td>
                             <td className="border-0">
-                              <span style={{ 
-                                background: o.status === "Delivered" ? "#aee9d1" : (o.status === "Shipped" ? "#b4e1fa" : "#fef08a"), 
-                                color: o.status === "Delivered" ? "#007f5f" : (o.status === "Shipped" ? "#006c9c" : "#854d0e"), 
-                                padding: "2px 8px", 
-                                borderRadius: "12px", 
-                                fontSize: "0.75rem", 
-                                fontWeight: "600" 
+                              <span style={{
+                                background: o.status === "Delivered" ? "#aee9d1" : (o.status === "Shipped" ? "#b4e1fa" : "#fef08a"),
+                                color: o.status === "Delivered" ? "#007f5f" : (o.status === "Shipped" ? "#006c9c" : "#854d0e"),
+                                padding: "2px 8px",
+                                borderRadius: "12px",
+                                fontSize: "0.75rem",
+                                fontWeight: "600"
                               }}>
                                 {o.status}
                               </span>
@@ -1423,18 +1525,24 @@ export default function StoreOwnerDashboard() {
                               </div>
                             </td>
                             <td className="border-0">
-                              <span style={{ 
-                                background: p.status === "In Stock" ? "#aee9d1" : "#e1e3e5", 
-                                color: p.status === "In Stock" ? "#007f5f" : "#202223", 
-                                padding: "2px 8px", 
-                                borderRadius: "12px", 
-                                fontSize: "0.75rem", 
-                                fontWeight: "600" 
+                              <span style={{
+                                background: p.status === "In Stock" ? "#aee9d1" : "#e1e3e5",
+                                color: p.status === "In Stock" ? "#007f5f" : "#202223",
+                                padding: "2px 8px",
+                                borderRadius: "12px",
+                                fontSize: "0.75rem",
+                                fontWeight: "600"
                               }}>
                                 {p.status === "In Stock" ? "Active" : p.status}
                               </span>
                             </td>
-                            <td className="border-0 fs-7" style={{ color: "#6d7175" }}>{p.stock} in stock</td>
+                            <td className="border-0">
+                              <div className="btn-group btn-group-sm">
+                                <button onClick={() => adjustStock(p.id, -1)} className="btn btn-outline-secondary py-0 px-2" title="Decrease Stock">-</button>
+                                <span className="btn btn-light fs-8 py-0 px-3 border border-secondary border-opacity-25" style={{ pointerEvents: "none", color: "#202223" }}>{p.stock}</span>
+                                <button onClick={() => adjustStock(p.id, 1)} className="btn btn-outline-secondary py-0 px-2" title="Increase Stock">+</button>
+                              </div>
+                            </td>
                             <td className="border-0 fs-7" style={{ color: "#6d7175" }}>{p.category || "Apparel"}</td>
                             <td className="border-0 text-end pe-4">
                               <div className="d-flex justify-content-end gap-2">
@@ -1747,13 +1855,13 @@ export default function StoreOwnerDashboard() {
                                   <td className="border-0 fw-semibold" style={{ color: "#202223" }}>{c.orders} orders</td>
                                   <td className="border-0 fw-bold" style={{ color: "#202223" }}>{c.spent}</td>
                                   <td className="border-0">
-                                    <span style={{ 
-                                      background: c.tier === "VIP" ? "#fef08a" : "#e1e3e5", 
-                                      color: c.tier === "VIP" ? "#854d0e" : "#202223", 
-                                      padding: "2px 8px", 
-                                      borderRadius: "12px", 
-                                      fontSize: "0.75rem", 
-                                      fontWeight: "600" 
+                                    <span style={{
+                                      background: c.tier === "VIP" ? "#fef08a" : "#e1e3e5",
+                                      color: c.tier === "VIP" ? "#854d0e" : "#202223",
+                                      padding: "2px 8px",
+                                      borderRadius: "12px",
+                                      fontSize: "0.75rem",
+                                      fontWeight: "600"
                                     }}>
                                       {c.tier}
                                     </span>
@@ -1919,7 +2027,16 @@ export default function StoreOwnerDashboard() {
                                       <div className="w-8 h-8 rounded-circle d-flex align-items-center justify-content-center" style={{ background: "#f1f2f4", color: "#202223", border: "1px solid #dfe3e8" }}>
                                         <Tag size={14} />
                                       </div>
-                                      <span>{cat.name}</span>
+                                      <a
+                                        href={`http://${activeStore?.name?.toLowerCase().replace(/\s+/g, '') || 'teststore1'}.localhost${window.location.port ? ':' + window.location.port : ''}/#${cat.name.toLowerCase().includes('women') ? 'women' : cat.name.toLowerCase().includes('men') ? 'men' : cat.name.toLowerCase().includes('kid') ? 'kids' : cat.name.toLowerCase().includes('accessories') ? 'accessories' : cat.name.toLowerCase().includes('tv') ? 'tv-appliances' : 'electronics'}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-decoration-underline"
+                                        style={{ color: "#2874f0", cursor: "pointer" }}
+                                        title={`View ${cat.name} in Storefront`}
+                                      >
+                                        {cat.name}
+                                      </a>
                                     </div>
                                   </td>
                                   <td className="border-0 fs-8" style={{ color: "#6d7175", maxWidth: 260 }}>{cat.description || "—"}</td>
@@ -2010,7 +2127,25 @@ export default function StoreOwnerDashboard() {
                           <div className="flex-grow-1">
                             <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
                               <div>
-                                <h3 className="fs-5 font-bold mb-0" style={{ color: "#202223" }}>{activeStore.name}</h3>
+                                <div className="d-flex align-items-center gap-2 flex-wrap">
+                                  <h3 className="fs-5 font-bold mb-0" style={{ color: "#202223" }}>{activeStore.name}</h3>
+                                  <span
+                                    title="Store ID in database"
+                                    style={{
+                                      background: "#f1f2f4",
+                                      color: "#454f5b",
+                                      border: "1px solid #dfe3e8",
+                                      padding: "1px 8px",
+                                      borderRadius: "6px",
+                                      fontSize: "0.72rem",
+                                      fontWeight: "700",
+                                      fontFamily: "monospace",
+                                      letterSpacing: "0.03em"
+                                    }}
+                                  >
+                                    ID&nbsp;#{activeStore.id}
+                                  </span>
+                                </div>
                                 <span className="fs-8 fw-semibold" style={{ color: "#007f5f" }}>
                                   https://{activeStore.subdomain || activeStore.slug}.storemanager.app
                                 </span>
@@ -2026,6 +2161,25 @@ export default function StoreOwnerDashboard() {
                         {/* Specifications Grid */}
                         <div className="row g-3 pt-3 border-top" style={{ borderColor: "#dfe3e8" }}>
                           <div className="col-6 col-md-3">
+                            <span className="fs-8 d-block mb-1" style={{ color: "#6d7175" }}>Store ID</span>
+                            <strong className="fs-7 d-flex align-items-center gap-1" style={{ color: "#202223", fontFamily: "monospace" }}>
+                              <span
+                                style={{
+                                  background: "#e3f5f1",
+                                  color: "#007f5f",
+                                  border: "1px solid #c3e9df",
+                                  padding: "2px 10px",
+                                  borderRadius: "6px",
+                                  fontWeight: "700",
+                                  fontSize: "0.85rem",
+                                  letterSpacing: "0.04em"
+                                }}
+                              >
+                                #{activeStore.id}
+                              </span>
+                            </strong>
+                          </div>
+                          <div className="col-6 col-md-3">
                             <span className="fs-8 d-block mb-1" style={{ color: "#6d7175" }}>Category</span>
                             <strong className="fs-7" style={{ color: "#202223" }}>{activeStore.category || "General Merchant Store"}</strong>
                           </div>
@@ -2033,7 +2187,7 @@ export default function StoreOwnerDashboard() {
                             <span className="fs-8 d-block mb-1" style={{ color: "#6d7175" }}>Currency</span>
                             <strong className="fs-7" style={{ color: "#202223" }}>{activeStore.currency || "USD ($)"}</strong>
                           </div>
-                          <div className="col-6 col-md-4">
+                          <div className="col-6 col-md-3">
                             <span className="fs-8 d-block mb-1" style={{ color: "#6d7175" }}>Support Contact</span>
                             <strong className="fs-7" style={{ color: "#202223" }}>{activeStore.email || "support@merchant.local"}</strong>
                           </div>
@@ -2043,20 +2197,20 @@ export default function StoreOwnerDashboard() {
                         <div className="row g-3 pt-2">
                           <div className="col-4">
                             <div className="p-3 rounded-3 text-center" style={{ background: "#f1f2f4", border: "1px solid #dfe3e8" }}>
-                              <div className="fs-5 font-bold" style={{ color: "#202223" }}>{activeStore.currency || "USD"}</div>
-                              <div className="fs-8" style={{ color: "#6d7175" }}>Store Currency</div>
+                              <div className="fs-5 font-bold" style={{ color: "#202223" }}>{categoriesList.length}</div>
+                              <div className="fs-8" style={{ color: "#6d7175" }}>Collections</div>
                             </div>
                           </div>
                           <div className="col-4">
                             <div className="p-3 rounded-3 text-center" style={{ background: "#f1f2f4", border: "1px solid #dfe3e8" }}>
-                              <div className="fs-5 font-bold" style={{ color: "#202223" }}>{activeStore.products_count ?? 0}</div>
-                              <div className="fs-8" style={{ color: "#6d7175" }}>Catalog Products</div>
+                              <div className="fs-5 font-bold" style={{ color: "#202223" }}>{productsList.length}</div>
+                              <div className="fs-8" style={{ color: "#6d7175" }}>Products</div>
                             </div>
                           </div>
                           <div className="col-4">
                             <div className="p-3 rounded-3 text-center" style={{ background: "#f1f2f4", border: "1px solid #dfe3e8" }}>
-                              <div className="fs-5 font-bold" style={{ color: "#202223" }}>{activeStore.orders_count ?? 0}</div>
-                              <div className="fs-8" style={{ color: "#6d7175" }}>Total Orders</div>
+                              <div className="fs-5 font-bold" style={{ color: "#202223" }}>{realOrders.length}</div>
+                              <div className="fs-8" style={{ color: "#6d7175" }}>Orders</div>
                             </div>
                           </div>
                         </div>
@@ -2092,6 +2246,216 @@ export default function StoreOwnerDashboard() {
                       </div>
                     </div>
                   </div>
+
+                  {/* ── COLLECTIONS PANEL ── */}
+                  <div style={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: "8px", overflow: "hidden", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
+                    <div className="d-flex align-items-center justify-content-between px-4 py-3" style={{ borderBottom: "1px solid #f1f2f4" }}>
+                      <div className="d-flex align-items-center gap-2">
+                        <Tag size={16} style={{ color: "#007f5f" }} />
+                        <h4 className="fs-6 font-bold mb-0" style={{ color: "#202223" }}>Collections</h4>
+                        <span style={{ background: "#f1f2f4", color: "#6d7175", padding: "1px 8px", borderRadius: "10px", fontSize: "0.72rem", fontWeight: 700 }}>
+                          {categoriesList.length}
+                        </span>
+                        <span className="fs-9 fw-semibold" style={{ color: "#6d7175", fontSize: "0.7rem" }}>• Store ID #{activeStore.id}</span>
+                      </div>
+                      <button
+                        onClick={() => setActive("categories")}
+                        className="btn btn-sm d-flex align-items-center gap-1 fw-bold"
+                        style={{ background: "#1c2226", color: "#fff", borderRadius: "6px", fontSize: "0.78rem" }}
+                      >
+                        <Plus size={14} /> Add Collection
+                      </button>
+                    </div>
+
+                    {categoriesList.length === 0 ? (
+                      <div className="text-center py-5 px-4">
+                        <Tag size={32} style={{ color: "#c9cccf", marginBottom: 10 }} />
+                        <p className="fs-8 mb-2" style={{ color: "#6d7175" }}>No collections found for Store ID #{activeStore.id}</p>
+                        <button
+                          onClick={() => setActive("categories")}
+                          className="btn btn-sm fw-bold"
+                          style={{ background: "#007f5f", color: "#fff", borderRadius: "6px" }}
+                        >
+                          Create First Collection
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="table-responsive">
+                        <table className="table table-hover mb-0 align-middle border-0">
+                          <thead>
+                            <tr className="fs-8 fw-semibold" style={{ color: "#6d7175", background: "#f9fafb", borderBottom: "1px solid #e4e5e7" }}>
+                              <th className="border-0 ps-4 py-2">Collection Name</th>
+                              <th className="border-0 py-2">Slug</th>
+                              <th className="border-0 py-2">Products</th>
+                              <th className="border-0 py-2">Featured</th>
+                              <th className="border-0 text-end pe-4 py-2">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {categoriesList.map((cat) => (
+                              <tr key={cat.id} style={{ borderBottom: "1px solid #f1f2f4" }}>
+                                <td className="border-0 ps-4 py-2">
+                                  <div className="d-flex align-items-center gap-2">
+                                    <div
+                                      className="rounded-2 d-flex align-items-center justify-content-center flex-shrink-0 fw-bold"
+                                      style={{ width: 30, height: 30, background: "#e3f5f1", color: "#007f5f", fontSize: "0.75rem", border: "1px solid #c3e9df" }}
+                                    >
+                                      {(cat.name || "C").charAt(0).toUpperCase()}
+                                    </div>
+                                    <div>
+                                      <div className="fw-semibold fs-7" style={{ color: "#202223" }}>{cat.name}</div>
+                                      {cat.description && (
+                                        <div className="text-truncate" style={{ color: "#6d7175", maxWidth: 220, fontSize: "0.7rem" }}>{cat.description}</div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="border-0 py-2">
+                                  <code style={{ background: "#f1f2f4", padding: "1px 6px", borderRadius: 4, fontSize: "0.72rem", color: "#454f5b" }}>
+                                    {cat.slug || (cat.name || "").toLowerCase().replace(/\s+/g, "-")}
+                                  </code>
+                                </td>
+                                <td className="border-0 py-2 fw-bold fs-7" style={{ color: "#202223" }}>{cat.products_count ?? 0}</td>
+                                <td className="border-0 py-2">
+                                  {cat.featured ? (
+                                    <span style={{ background: "#fef08a", color: "#854d0e", padding: "2px 8px", borderRadius: "10px", fontSize: "0.7rem", fontWeight: 700 }}>⭐ Featured</span>
+                                  ) : (
+                                    <span style={{ color: "#c9cccf", fontSize: "0.75rem" }}>—</span>
+                                  )}
+                                </td>
+                                <td className="border-0 text-end pe-4 py-2">
+                                  <div className="d-flex justify-content-end gap-1">
+                                    <button
+                                      onClick={() => { setEditingCategory(cat); setCategoryForm({ name: cat.name, description: cat.description || "", featured: !!cat.featured }); setShowCategoryModal(true); }}
+                                      className="btn btn-sm btn-light border"
+                                      style={{ color: "#6d7175", padding: "2px 8px" }}
+                                      title="Edit collection"
+                                    >
+                                      <Edit size={13} />
+                                    </button>
+                                    <button
+                                      onClick={() => confirmDeleteCategory(cat)}
+                                      className="btn btn-sm btn-light border"
+                                      style={{ color: "#d82c0d", padding: "2px 8px" }}
+                                      title="Delete collection"
+                                    >
+                                      <Trash2 size={13} />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ── PRODUCTS PANEL ── */}
+                  <div style={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: "8px", overflow: "hidden", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
+                    <div className="d-flex align-items-center justify-content-between px-4 py-3" style={{ borderBottom: "1px solid #f1f2f4" }}>
+                      <div className="d-flex align-items-center gap-2">
+                        <Package size={16} style={{ color: "#007f5f" }} />
+                        <h4 className="fs-6 font-bold mb-0" style={{ color: "#202223" }}>Products</h4>
+                        <span style={{ background: "#f1f2f4", color: "#6d7175", padding: "1px 8px", borderRadius: "10px", fontSize: "0.72rem", fontWeight: 700 }}>
+                          {productsList.length}
+                        </span>
+                        <span className="fs-9 fw-semibold" style={{ color: "#6d7175", fontSize: "0.7rem" }}>• Store ID #{activeStore.id}</span>
+                      </div>
+                      <button
+                        onClick={() => openAddProductModal()}
+                        className="btn btn-sm d-flex align-items-center gap-1 fw-bold"
+                        style={{ background: "#1c2226", color: "#fff", borderRadius: "6px", fontSize: "0.78rem" }}
+                      >
+                        <Plus size={14} /> Add Product
+                      </button>
+                    </div>
+
+                    {productsList.length === 0 ? (
+                      <div className="text-center py-5 px-4">
+                        <Package size={32} style={{ color: "#c9cccf", marginBottom: 10 }} />
+                        <p className="fs-8 mb-2" style={{ color: "#6d7175" }}>No products found for Store ID #{activeStore.id}</p>
+                        <button
+                          onClick={() => openAddProductModal()}
+                          className="btn btn-sm fw-bold"
+                          style={{ background: "#007f5f", color: "#fff", borderRadius: "6px" }}
+                        >
+                          Add First Product
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="table-responsive">
+                        <table className="table table-hover mb-0 align-middle border-0">
+                          <thead>
+                            <tr className="fs-8 fw-semibold" style={{ color: "#6d7175", background: "#f9fafb", borderBottom: "1px solid #e4e5e7" }}>
+                              <th className="border-0 ps-4 py-2">Product</th>
+                              <th className="border-0 py-2">SKU</th>
+                              <th className="border-0 py-2">Collection</th>
+                              <th className="border-0 py-2">Price</th>
+                              <th className="border-0 py-2">Stock</th>
+                              <th className="border-0 py-2">Status</th>
+                              <th className="border-0 text-end pe-4 py-2">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {productsList.map((p) => (
+                              <tr key={p.id} style={{ borderBottom: "1px solid #f1f2f4" }}>
+                                <td className="border-0 ps-4 py-2">
+                                  <div className="d-flex align-items-center gap-2">
+                                    <div className="rounded overflow-hidden flex-shrink-0" style={{ width: 36, height: 36, border: "1px solid #dfe3e8", background: "#f1f2f4" }}>
+                                      <img
+                                        src={normalizeProductImage(p.image, p.name)}
+                                        alt={p.name}
+                                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                        onError={(e) => { e.target.src = getFallbackImageByName(p.name); }}
+                                      />
+                                    </div>
+                                    <span className="fw-semibold fs-7 text-truncate" style={{ color: "#202223", maxWidth: 160 }}>{p.name}</span>
+                                  </div>
+                                </td>
+                                <td className="border-0 py-2">
+                                  <code style={{ background: "#f1f2f4", padding: "1px 6px", borderRadius: 4, fontSize: "0.72rem", color: "#454f5b" }}>{p.sku || "—"}</code>
+                                </td>
+                                <td className="border-0 py-2 fs-8" style={{ color: "#6d7175" }}>{p.category || "—"}</td>
+                                <td className="border-0 py-2 fw-semibold fs-7" style={{ color: "#202223" }}>{p.price}</td>
+                                <td className="border-0 py-2 fw-bold fs-7" style={{ color: "#202223" }}>{p.stock}</td>
+                                <td className="border-0 py-2">
+                                  <span style={{
+                                    background: p.status === "In Stock" ? "#aee9d1" : p.status === "Low Stock" ? "#fef08a" : "#ffd2cc",
+                                    color: p.status === "In Stock" ? "#007f5f" : p.status === "Low Stock" ? "#854d0e" : "#d82c0d",
+                                    padding: "2px 8px", borderRadius: "10px", fontSize: "0.7rem", fontWeight: 700
+                                  }}>
+                                    {p.status}
+                                  </span>
+                                </td>
+                                <td className="border-0 text-end pe-4 py-2">
+                                  <div className="d-flex justify-content-end gap-1">
+                                    <button
+                                      onClick={() => openEditProductModal(p)}
+                                      className="btn btn-sm btn-light border"
+                                      style={{ color: "#6d7175", padding: "2px 8px" }}
+                                      title="Edit product"
+                                    >
+                                      <Edit size={13} />
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteProduct(p)}
+                                      className="btn btn-sm btn-light border"
+                                      style={{ color: "#d82c0d", padding: "2px 8px" }}
+                                      title="Delete product"
+                                    >
+                                      <Trash2 size={13} />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+
                 </>
               )}
             </div>
@@ -2236,10 +2600,11 @@ export default function StoreOwnerDashboard() {
               <div>
                 <label className="text-muted mb-1 fs-8">Category</label>
                 <input
-                  value={newProd.category || ""}
+                  type="text"
+                  value={newProd.category}
                   onChange={(e) => setNewProd({ ...newProd, category: e.target.value })}
                   className="form-control"
-                  placeholder="e.g. Apparel"
+                  placeholder="e.g. Shirts, Pants..."
                 />
               </div>
               <div>

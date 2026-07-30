@@ -1,48 +1,81 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
+import { useAuth } from '../context/AuthContext';
 import { useStore } from '../context/StoreContext';
 import useSEO from '../hooks/useSEO';
 
+const loadStoredCategories = () => {
+  try {
+    const saved = localStorage.getItem('aureum_owner_categories');
+    if (!saved) return [];
+    const parsed = JSON.parse(saved);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.debug('Failed to load stored categories', error);
+    return [];
+  }
+};
+
+const loadStoredCategoryDraft = () => {
+  try {
+    const saved = localStorage.getItem('aureum_category_form_draft');
+    if (!saved) return { name: '', description: '', featured: false };
+    const parsed = JSON.parse(saved);
+    return {
+      name: parsed?.name || '',
+      description: parsed?.description || '',
+      featured: Boolean(parsed?.featured),
+    };
+  } catch (error) {
+    console.debug('Failed to load category draft', error);
+    return { name: '', description: '', featured: false };
+  }
+};
+
 export default function Categories() {
+  const { user } = useAuth();
   const { activeStore } = useStore();
   const navigate = useNavigate();
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState(loadStoredCategories);
   const [loading, setLoading] = useState(true);
 
   useSEO({ title: 'Collection Management', description: 'Organize products into store collections.' });
 
   const [showModal, setShowModal] = useState(false);
   const [editingCat, setEditingCat] = useState(null);
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [featured, setFeatured] = useState(false);
+  const [name, setName] = useState(loadStoredCategoryDraft().name);
+  const [description, setDescription] = useState(loadStoredCategoryDraft().description);
+  const [featured, setFeatured] = useState(loadStoredCategoryDraft().featured);
   const [errorMsg, setErrorMsg] = useState('');
 
   const fetchCategories = async () => {
+    const storedCategories = loadStoredCategories();
+    if (storedCategories.length > 0) {
+      setCategories(storedCategories);
+    }
+
     setLoading(true);
     try {
       const storeId = activeStore?.id || 1;
-      const res = await api.get(`/categories?store_id=${storeId}`);
+      const ownerId = user?.id || user?.user_id || null;
+      const res = await api.get(`/categories`, { params: { store_id: storeId, owner_id: ownerId } });
       if (res.data && Array.isArray(res.data) && res.data.length > 0) {
         setCategories(res.data);
+        localStorage.setItem('aureum_owner_categories', JSON.stringify(res.data));
         setLoading(false);
         return;
       }
     } catch (err) {
       console.debug('Failed to fetch categories', err);
     }
-    const saved = localStorage.getItem("aureum_owner_categories");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          setCategories(parsed);
-          setLoading(false);
-          return;
-        }
-      } catch (e) {}
+
+    if (storedCategories.length > 0) {
+      setCategories(storedCategories);
+      setLoading(false);
+      return;
     }
+
     setCategories([]);
     setLoading(false);
   };
@@ -51,19 +84,24 @@ export default function Categories() {
     fetchCategories();
   }, [activeStore]);
 
+  useEffect(() => {
+    localStorage.setItem('aureum_category_form_draft', JSON.stringify({ name, description, featured }));
+  }, [name, description, featured]);
+
   const handleOpenCreate = () => {
+    const draft = loadStoredCategoryDraft();
     setEditingCat(null);
-    setName('');
-    setDescription('');
-    setFeatured(false);
+    setName(draft.name);
+    setDescription(draft.description);
+    setFeatured(draft.featured);
     setShowModal(true);
   };
 
   const handleOpenEdit = (cat) => {
     setEditingCat(cat);
-    setName(cat.name);
+    setName(cat.name || '');
     setDescription(cat.description || '');
-    setFeatured(cat.featured || false);
+    setFeatured(Boolean(cat.featured));
     setShowModal(true);
   };
 
@@ -76,7 +114,10 @@ export default function Categories() {
       description,
       featured,
       slug: name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
-      products_count: editingCat?.products_count || 0
+      products_count: editingCat?.products_count || 0,
+      store_id: activeStore?.id || 1,
+      user_id: activeStore?.user_id || 'dummy-user-id',
+      owner_email: activeStore?.owner_email || 'dummy-email@example.com'
     };
 
     try {

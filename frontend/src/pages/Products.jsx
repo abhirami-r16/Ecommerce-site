@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
+import { useAuth } from '../context/AuthContext';
 import { useStore } from '../context/StoreContext';
 import useSEO from '../hooks/useSEO';
 import {
@@ -75,6 +76,7 @@ const initialSampleProducts = [
 ];
 
 export default function Products() {
+  const { user } = useAuth();
   const { stores, activeStore, formatPrice } = useStore();
   const location = useLocation();
   const navigate = useNavigate();
@@ -133,9 +135,10 @@ export default function Products() {
     setLoading(true);
     try {
       const storeId = selectedStoreId || activeStore?.id || 1;
+      const ownerId = user?.id || user?.user_id || null;
       const [prodRes, catRes] = await Promise.all([
-        api.get(`/products?store_id=${storeId}&search=${search}&category_id=${selectedCat}`),
-        api.get(`/categories?store_id=${storeId}`)
+        api.get(`/products`, { params: { store_id: storeId, owner_id: ownerId, search, category_id: selectedCat } }),
+        api.get(`/categories`, { params: { store_id: storeId, owner_id: ownerId } })
       ]);
       if (Array.isArray(prodRes.data) && prodRes.data.length > 0) {
         setProducts(prodRes.data);

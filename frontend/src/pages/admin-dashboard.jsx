@@ -13,6 +13,7 @@ import {
   Server, Zap, Globe, Sliders
 } from "lucide-react";
 
+
 const GOLD = "#d4af37";
 const GOLD_LIGHT = "#f3d675";
 const GOLD_DEEP = "#8a6d1f";
@@ -402,7 +403,7 @@ export default function AdminDashboard() {
 
   return (
     <div style={{ background: "#040404", color: "#f6f1e4", minHeight: "100vh" }} className="d-flex w-100">
-      
+
       {/* 1. SUPER ADMIN SIDEBAR */}
       <aside className="store-sidebar d-flex flex-column justify-between p-3" style={{ width: 250, minWidth: 250, background: "#050505", borderRight: "1px solid rgba(212,175,55,0.18)", minHeight: "100vh" }}>
         <div>
@@ -454,7 +455,7 @@ export default function AdminDashboard() {
 
       {/* 2. MAIN CONTENT VIEW */}
       <div className="flex-grow-1 d-flex flex-column overflow-hidden" style={{ minWidth: 0 }}>
-        
+
         {/* TOPBAR HEADER */}
         <header className="store-topbar d-flex align-items-center justify-content-between px-4 py-3" style={{ background: "#050505", borderBottom: "1px solid rgba(212,175,55,0.18)" }}>
           <div>
@@ -477,11 +478,11 @@ export default function AdminDashboard() {
 
         {/* MAIN BODY AREA */}
         <main className="p-4 flex-grow-1 overflow-y-auto" style={{ background: "#040404" }}>
-          
+
           {/* MODULE 1: DASHBOARD OVERVIEW */}
           {active === "dashboard" && (
             <div className="d-flex flex-column gap-4">
-              
+
               {/* 6 METRIC STATS CARDS */}
               <div className="row g-3">
                 <div className="col-6 col-md-4 col-lg-2">
@@ -742,12 +743,12 @@ export default function AdminDashboard() {
                   const matchesOwner = !ownerOnlyProducts || isOwnerProduct;
                   return matchesSearch && matchesStore && matchesCategory && matchesOwner && matchesOwnerSelection;
                 }).length === 0 && (
-                  <div className="col-12">
-                    <div className="gold-panel text-center py-5">
-                      <p className="fs-8 text-muted mb-0">No products match your search or filters.</p>
+                    <div className="col-12">
+                      <div className="gold-panel text-center py-5">
+                        <p className="fs-8 text-muted mb-0">No products match your search or filters.</p>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
               </div>
             </div>
           )}
@@ -1052,7 +1053,7 @@ export default function AdminDashboard() {
                   <h2 className="fs-4 font-bold text-white mb-0">Platform Analytics</h2>
                   <p className="fs-8 mb-0 text-muted">Comprehensive performance insights across stores, merchants, revenue, and category demand.</p>
                 </div>
-                <button onClick={() => alert("Exporting analytics snapshot..." )} className="btn btn-outline-warning btn-sm">
+                <button onClick={() => alert("Exporting analytics snapshot...")} className="btn btn-outline-warning btn-sm">
                   <Download size={16} className="me-1" /> Export Analytics
                 </button>
               </div>

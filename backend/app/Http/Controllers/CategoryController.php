@@ -30,18 +30,56 @@ class CategoryController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'store_id' => 'nullable|exists:stores,id',
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'featured' => 'nullable|boolean',
+            'store_id'        => 'nullable|integer',
+            'store_subdomain' => 'nullable|string|max:255',
+            'store_name'      => 'nullable|string|max:255',
+            'name'            => 'required|string|max:255',
+            'description'     => 'nullable|string',
+            'featured'        => 'nullable|boolean',
         ]);
 
+        // Resolve store_id using a 3-tier priority:
+        // 1. Direct store_id match
+        // 2. Subdomain match
+        // 3. Name match
+        $storeId = null;
+
+        if (!empty($validated['store_id'])) {
+            if (\App\Models\Store::where('id', $validated['store_id'])->exists()) {
+                $storeId = (int) $validated['store_id'];
+            }
+        }
+
+        if (!$storeId && !empty($validated['store_subdomain'])) {
+            $store = \App\Models\Store::where('subdomain', $validated['store_subdomain'])
+                ->orWhere('slug', $validated['store_subdomain'])
+                ->first();
+            if ($store) {
+                $storeId = $store->id;
+            }
+        }
+
+        if (!$storeId && !empty($validated['store_name'])) {
+            $store = \App\Models\Store::whereRaw('LOWER(name) = ?', [strtolower($validated['store_name'])])->first();
+            if ($store) {
+                $storeId = $store->id;
+            }
+        }
+
+        // Ensure slug uniqueness within the store
+        $slug = Str::slug($validated['name']);
+        $originalSlug = $slug;
+        $count = 1;
+        while (Category::where('slug', $slug)->where('store_id', $storeId)->exists()) {
+            $slug = $originalSlug . '-' . $count++;
+        }
+
         $category = Category::create([
-            'store_id' => $validated['store_id'] ?? null,
-            'name' => $validated['name'],
-            'slug' => Str::slug($validated['name']),
+            'store_id'    => $storeId,
+            'name'        => $validated['name'],
+            'slug'        => $slug,
             'description' => $validated['description'] ?? '',
-            'featured' => $validated['featured'] ?? false,
+            'featured'    => $validated['featured'] ?? false,
         ]);
 
         $category->loadCount('products');
@@ -60,11 +98,41 @@ class CategoryController extends Controller
         $category = Category::findOrFail($id);
 
         $validated = $request->validate([
-            'store_id' => 'nullable|exists:stores,id',
-            'name' => 'sometimes|required|string|max:255',
-            'description' => 'nullable|string',
-            'featured' => 'nullable|boolean',
+            'store_id'        => 'nullable|integer',
+            'store_subdomain' => 'nullable|string|max:255',
+            'store_name'      => 'nullable|string|max:255',
+            'name'            => 'sometimes|required|string|max:255',
+            'description'     => 'nullable|string',
+            'featured'        => 'nullable|boolean',
         ]);
+
+        // Resolve store_id with 3-tier fallback (only update if a value was explicitly sent)
+        if (array_key_exists('store_id', $validated) || !empty($validated['store_subdomain']) || !empty($validated['store_name'])) {
+            $resolvedStoreId = $category->store_id; // default: keep existing
+
+            if (!empty($validated['store_id'])) {
+                if (\App\Models\Store::where('id', $validated['store_id'])->exists()) {
+                    $resolvedStoreId = (int) $validated['store_id'];
+                }
+            }
+
+            if ($resolvedStoreId === $category->store_id && !empty($validated['store_subdomain'])) {
+                $store = \App\Models\Store::where('subdomain', $validated['store_subdomain'])
+                    ->orWhere('slug', $validated['store_subdomain'])
+                    ->first();
+                if ($store) $resolvedStoreId = $store->id;
+            }
+
+            if ($resolvedStoreId === $category->store_id && !empty($validated['store_name'])) {
+                $store = \App\Models\Store::whereRaw('LOWER(name) = ?', [strtolower($validated['store_name'])])->first();
+                if ($store) $resolvedStoreId = $store->id;
+            }
+
+            $validated['store_id'] = $resolvedStoreId;
+        }
+
+        // Remove non-model fields before update
+        unset($validated['store_subdomain'], $validated['store_name']);
 
         if (isset($validated['name'])) {
             $validated['slug'] = Str::slug($validated['name']);

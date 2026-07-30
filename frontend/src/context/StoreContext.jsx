@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '../api/axios';
+import { useAuth } from './AuthContext';
 
 const StoreContext = createContext();
 
@@ -26,6 +27,7 @@ const INITIAL_DEMO_STORES = [
 ];
 
 export const StoreProvider = ({ children }) => {
+  const { user } = useAuth();
   const [stores, setStores] = useState(INITIAL_DEMO_STORES);
   const [loading, setLoading] = useState(false);
   const [selectedStore, setSelectedStore] = useState(null);
@@ -43,6 +45,17 @@ export const StoreProvider = ({ children }) => {
   };
 
   const currentUserId = getUserId();
+
+  useEffect(() => {
+    if (!selectedStore && stores.length > 0) {
+      const ownerStores = stores.filter((store) => String(store.user_id ?? store.owner_id ?? store.owner?.id ?? '') === String(user?.id ?? user?.user_id ?? ''));
+      if (ownerStores.length > 0) {
+        setSelectedStore(ownerStores[0]);
+      } else if (stores.some((store) => String(store.id) === String(currentUserId))) {
+        setSelectedStore(stores.find((store) => String(store.id) === String(currentUserId)) || null);
+      }
+    }
+  }, [stores, user?.id, currentUserId]);
 
   // Show the full collection of stores to customers and browsing flows
   const availableStores = stores;

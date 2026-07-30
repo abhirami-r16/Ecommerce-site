@@ -23,7 +23,30 @@ import CartPage from '../pages/Cart';
 import OrdersPage from '../pages/Orders';
 import SettingsPage from '../pages/Settings';
 
+import StorefrontApp from '../pages/Storefront/StorefrontApp';
+
+const getSubdomain = () => {
+  const host = window.location.hostname;
+  const isIp = /^(\d{1,3}\.){3}\d{1,3}$/.test(host);
+  if (isIp || host === 'localhost') return null;
+  const parts = host.split('.');
+  if (parts.length >= 2 && parts[0] !== 'www' && parts[0] !== 'localhost') {
+    return parts[0];
+  }
+  return null;
+};
+
 function AppRoutes() {
+  const subdomain = getSubdomain();
+
+  if (subdomain) {
+    return (
+      <BrowserRouter>
+        <StorefrontApp subdomain={subdomain} />
+      </BrowserRouter>
+    );
+  }
+
   return (
     <BrowserRouter>
       <StoreProvider>
