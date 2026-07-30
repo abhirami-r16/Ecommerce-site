@@ -130,8 +130,8 @@ class OrderController extends Controller
             $customer->increment('total_spent', $totalAmount);
 
             // Generate order number
-            $orderCount = Order::where('store_id', $storeId)->count() + 1001;
-            $orderNumber = '#ORD-' . $orderCount;
+            $maxId = Order::max('id') ?? 0;
+            $orderNumber = '#ORD-' . ($maxId + 1001);
 
             $paymentMethod = $validated['payment_method'] ?? 'online';
             $paymentStatus = ($paymentMethod === 'cod') ? 'COD' : 'Paid';

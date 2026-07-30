@@ -9,6 +9,8 @@ import StorefrontHome from './StorefrontHome';
 import ProductDetail from './ProductDetail';
 import Cart from './Cart';
 import Checkout from './Checkout';
+import Wishlist from './Wishlist';
+import MyOrders from './MyOrders';
 import '../../styles/storefront.css';
 
 export default function StorefrontApp({ subdomain }) {
@@ -231,6 +233,8 @@ export default function StorefrontApp({ subdomain }) {
             <Route path="product/:id" element={<ProductDetail storeData={storeData} products={storeProducts} />} />
             <Route path="cart" element={<Cart />} />
             <Route path="checkout" element={<Checkout />} />
+            <Route path="wishlist" element={<Wishlist />} />
+            <Route path="orders" element={<MyOrders />} />
             {/* Additional routes such as /product/:id can be added here */}
             <Route path="*" element={<Navigate to="/" replace />} />
             </Route>

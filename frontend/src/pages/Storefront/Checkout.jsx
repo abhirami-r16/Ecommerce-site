@@ -64,11 +64,20 @@ export default function Checkout() {
         const existing = JSON.parse(localStorage.getItem('aureum_owner_orders') || '[]');
         const mockOrder = {
           id: '#ORD-' + (Math.floor(Math.random() * 9000) + 1000),
+          store_id: storeId,
           customer: orderPayload.customer_name,
           email: orderPayload.customer_email,
           total: cartTotal.toFixed(2),
           status: 'Pending',
-          date: new Date().toISOString()
+          date: new Date().toISOString(),
+          items: cartItems.map(item => ({
+             product_id: item.id,
+             product_name: item.name,
+             product: item, 
+             price: item.price,
+             quantity: item.quantity,
+             image_url: item.image || item.image_url
+          }))
         };
         existing.unshift(mockOrder);
         localStorage.setItem('aureum_owner_orders', JSON.stringify(existing));
@@ -154,8 +163,10 @@ export default function Checkout() {
                   className="form-check-input mt-0"
                 />
                 <div>
-                  <div className="fw-bold">Cash on Delivery (COD)</div>
-                  <div className="text-secondary fs-8">Pay with cash upon delivery</div>
+                  <div className="fw-bold fs-7 d-flex align-items-center gap-2">
+                    Cash on Delivery
+                  </div>
+                  <div className="fs-8 text-secondary">Pay with cash upon delivery</div>
                 </div>
               </label>
 
@@ -169,8 +180,8 @@ export default function Checkout() {
                   className="form-check-input mt-0"
                 />
                 <div>
-                  <div className="fw-bold">Online Payment</div>
-                  <div className="text-secondary fs-8">Pay securely via Credit Card / Debit Card</div>
+                  <div className="fw-bold fs-7">Credit Card / Online Payment</div>
+                  <div className="fs-8 text-secondary">Secure online payment (Simulated)</div>
                 </div>
               </label>
             </div>
@@ -183,32 +194,25 @@ export default function Checkout() {
         </div>
 
         <div className="col-lg-5">
-          <div className="bg-white rounded shadow-sm border border-light p-4 position-sticky" style={{ top: '20px' }}>
+          <div className="bg-white rounded shadow-sm border border-light p-4 position-sticky" style={{ top: 100 }}>
             <h3 className="fs-5 fw-bold mb-4">Order Summary</h3>
-            
             <div className="d-flex flex-column gap-3 mb-4">
-              {cartItems.map(item => (
-                <div key={item.id} className="d-flex align-items-center justify-content-between">
-                  <div className="d-flex align-items-center gap-3">
-                    <div style={{ width: 50, height: 50 }} className="bg-light rounded overflow-hidden flex-shrink-0 border">
-                      <img 
-                        src={item.image || item.image_url || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80'} 
-                        alt={item.name} 
-                        className="w-100 h-100 object-fit-cover" 
-                      />
-                    </div>
-                    <div>
-                      <div className="fs-7 fw-semibold">{item.name}</div>
-                      <div className="text-secondary fs-8">Qty: {item.quantity}</div>
-                    </div>
+              {cartItems.map((item, idx) => (
+                <div key={idx} className="d-flex align-items-center gap-3">
+                  <div style={{ width: 50, height: 50 }} className="bg-light border rounded overflow-hidden flex-shrink-0 position-relative">
+                    <img src={item.image} alt={item.name} className="w-100 h-100 object-fit-cover" />
+                    <span className="position-absolute top-0 end-0 badge bg-secondary rounded-circle" style={{ transform: 'translate(25%, -25%)' }}>
+                      {item.quantity}
+                    </span>
                   </div>
-                  <div className="fw-bold fs-7">
-                    ${(Number(item.price) * item.quantity).toFixed(2)}
+                  <div className="flex-grow-1">
+                    <div className="fs-7 fw-bold">{item.name}</div>
+                    <div className="fs-8 text-secondary">${Number(item.price).toFixed(2)}</div>
                   </div>
                 </div>
               ))}
             </div>
-
+            
             <div className="border-top pt-3 mb-3">
               <div className="d-flex justify-content-between mb-2 fs-7 text-secondary">
                 <span>Subtotal</span>
@@ -216,19 +220,18 @@ export default function Checkout() {
               </div>
               <div className="d-flex justify-content-between mb-3 fs-7 text-secondary">
                 <span>Shipping</span>
-                <span className="text-success">Free</span>
+                <span className="text-success fw-bold">Free</span>
               </div>
             </div>
             
-            <div className="d-flex justify-content-between border-top pt-3 mb-4 fw-bold fs-5">
+            <div className="d-flex justify-content-between align-items-center border-top pt-3 mb-4 fw-bold fs-5">
               <span>Total</span>
               <span>${cartTotal.toFixed(2)}</span>
             </div>
-            
             <button 
               type="submit" 
               form="checkout-form"
-              className="btn w-100 py-3 fw-bold text-white fs-6" 
+              className="btn w-100 py-3 fw-bold text-white fs-6 mt-4" 
               style={{ backgroundColor: '#fb641b' }}
               disabled={isSubmitting}
             >

@@ -32,6 +32,26 @@ html {
   background-color: #ffffff !important;
 }
 
+.storefront-app-root input:-webkit-autofill,
+.storefront-app-root input:-webkit-autofill:hover, 
+.storefront-app-root input:-webkit-autofill:focus, 
+.storefront-app-root input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px white inset !important;
+    -webkit-text-fill-color: #212121 !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+.storefront-app-root input:focus, 
+.storefront-app-root select:focus, 
+.storefront-app-root textarea:focus,
+.storefront-app-root .form-control:focus, 
+.storefront-app-root .form-select:focus {
+  background-color: #ffffff !important;
+  color: #212121 !important;
+  border-color: #2874f0 !important;
+  box-shadow: 0 0 0 0.2rem rgba(40, 116, 240, 0.25) !important;
+}
+
 .storefront-app-root .text-secondary,
 .storefront-app-root .text-muted {
   color: #6c757d !important;

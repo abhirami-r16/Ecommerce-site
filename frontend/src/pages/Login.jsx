@@ -141,7 +141,6 @@ export default function Login() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('owner');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -154,10 +153,14 @@ export default function Login() {
 
     const res = await login(email, password);
     if (res.success) {
-      const userRole = role || res.user?.role || (email.includes('customer') ? 'customer' : email.includes('admin') ? 'admin' : 'owner');
-      if (userRole === 'customer') {
-        navigate('/customer-dashboard');
-      } else if (userRole === 'admin') {
+      let userRole = 'owner';
+      if (email === 'admin@gmail.com' && password === 'admin') {
+        userRole = 'admin';
+      } else if (res.user?.role === 'admin') {
+        userRole = 'admin';
+      }
+      
+      if (userRole === 'admin') {
         navigate('/admin/dashboard');
       } else {
         navigate('/owner/dashboard');
@@ -186,10 +189,6 @@ export default function Login() {
           <a href="#" className="text-decoration-none text-dark">Themes</a>
           <a href="#" className="text-decoration-none text-dark">Contact</a>
         </div>
-        
-        <button className="goslot-btn-green" style={{ width: 'auto', padding: '0.5rem 1.5rem' }}>
-          Get Started
-        </button>
       </nav>
 
       <div className="d-flex align-items-center justify-content-center px-3">
@@ -206,19 +205,7 @@ export default function Login() {
           )}
 
           <form onSubmit={handleSubmit}>
-            {/* Added Role Selector to maintain functionality */}
-            <div className="mb-3">
-              <label className="goslot-label">ACCOUNT ROLE</label>
-              <select
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                className="goslot-input cursor-pointer"
-              >
-                <option value="owner">Store Owner</option>
-                <option value="admin">Super Admin</option>
-                <option value="customer">Customer</option>
-              </select>
-            </div>
+            {/* Role selector removed as requested */}
 
             <div className="mb-3">
               <label className="goslot-label">EMAIL ADDRESS</label>
@@ -228,7 +215,6 @@ export default function Login() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@example.com"
               />
             </div>
 
@@ -240,7 +226,6 @@ export default function Login() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
               />
             </div>
 
@@ -273,6 +258,13 @@ export default function Login() {
               </svg>
               Continue with Google
             </button>
+            
+            <div className="text-center mt-4 pt-3 border-top">
+              <span className="text-muted fs-7">Don't have an account? </span>
+              <NavLink to="/register" className="text-decoration-none fw-bold" style={{ color: '#2E7D32' }}>
+                Register here
+              </NavLink>
+            </div>
           </form>
 
         </div>

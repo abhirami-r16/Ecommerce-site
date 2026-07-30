@@ -822,18 +822,20 @@ export default function CustomerDashboard() {
   ];
 
   return (
-    <div style={{ fontFamily: "'Poppins', sans-serif", backgroundColor: '#f1f2f4', color: '#202223', minHeight: '100vh' }}>
+    <div style={{ fontFamily: "'Poppins', sans-serif", backgroundColor: '#f1f2f4', color: '#202223', minHeight: '100vh' }} className="d-flex w-100 flex-column flex-md-row">
       
-      {/* 1. FIXED NAVBAR */}
-      <header className="sticky-top border-bottom" style={{ backgroundColor: '#0F0F0F', borderColor: 'rgba(212, 175, 55, 0.25)', height: 70 }}>
+      {/* 1. FIXED NAVBAR (Mobile Only / Top Bar) */}
+      <header className="sticky-top border-bottom d-md-none" style={{ backgroundColor: '#ffffff', borderColor: '#dfe3e8', height: 70 }}>
         <div className="container-fluid px-4 h-100 d-flex align-items-center justify-content-between">
           <div className="d-flex align-items-center gap-3">
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="btn btn-sm d-md-none text-dark border-0">
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="btn btn-sm text-dark border-0">
               <Menu size={22} />
             </button>
             <div className="d-flex align-items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
-              <img src={AureumLogo} alt="AUREUM logo" style={{ width: 40, height: 40 }} />
-              <span className="fs-5 font-bold tracking-widest font-serif text-dark">AUREUM</span>
+              <div className="brand-icon-box d-flex align-items-center justify-content-center rounded-3" style={{ width: 34, height: 34, background: "#ffffff", color: "#202223", border: "1px solid #dfe3e8", fontWeight: 700, fontSize: 18 }}>
+                A
+              </div>
+              <span className="brand-title" style={{ color: "#202223", fontWeight: 800, fontSize: "0.95rem", letterSpacing: "0.15em" }}>AUREUM</span>
             </div>
           </div>
 
@@ -866,10 +868,18 @@ export default function CustomerDashboard() {
       )}
 
       {/* 2. BODY LAYOUT */}
-      <div className="d-flex">
+      <div className="d-flex flex-grow-1">
         
         {/* SIDEBAR */}
-          <aside className={`customer-sidebar p-3 border-end ${sidebarOpen ? 'd-block' : 'd-none d-md-block'}`} style={{ width: 260, minWidth: 260, backgroundColor: '#080705', borderColor: 'rgba(255,255,255,0.08)', minHeight: 'calc(100vh - 70px)' }}>
+          <aside className={`customer-sidebar p-3 border-end flex-shrink-0 ${sidebarOpen ? 'd-block position-absolute bg-white z-3' : 'd-none d-md-flex flex-column'}`} style={{ width: 250, minWidth: 250, backgroundColor: '#ebebeb', borderColor: '#dfe3e8', minHeight: '100vh' }}>
+          
+          <div className="d-none d-md-flex align-items-center gap-2 p-2 mb-3 border-bottom" style={{ borderColor: "#dfe3e8" }}>
+            <div className="brand-icon-box d-flex align-items-center justify-content-center rounded-3" style={{ width: 34, height: 34, background: "#ffffff", color: "#202223", border: "1px solid #dfe3e8", fontWeight: 700, fontSize: 18 }}>
+              A
+            </div>
+            <span className="brand-title" style={{ color: "#202223", fontWeight: 800, fontSize: "0.95rem", letterSpacing: "0.15em" }}>AUREUM</span>
+          </div>
+
           <div className="px-2 pb-3 text-uppercase fs-8 font-semibold tracking-wider" style={{ color: '#6d7175' }}>
             Customer Workspace
           </div>
@@ -886,10 +896,10 @@ export default function CustomerDashboard() {
                   onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}
                   className={`btn text-start d-flex align-items-center gap-3 px-3 py-2.5 rounded-3 border-0 transition-all ${isActive ? 'active' : ''}`}
                   style={{
-                    backgroundColor: isActive ? 'rgba(255,255,255,0.08)' : 'transparent',
+                    backgroundColor: isActive ? 'rgba(0,127,95,0.1)' : 'transparent',
                     color: itemTextColor,
-                    fontWeight: isActive ? '600' : 'normal',
-                    borderLeft: isActive ? '3px solid rgba(255,255,255,0.22)' : '3px solid transparent'
+                    fontWeight: isActive ? 'bold' : '600',
+                    borderLeft: isActive ? '3px solid #007f5f' : '3px solid transparent'
                   }}
                 >
                   <Icon size={18} style={{ color: itemIconColor }} />
@@ -904,18 +914,29 @@ export default function CustomerDashboard() {
         <main className="flex-grow-1 p-4 overflow-y-auto" style={{ minWidth: 0 }}>
           
           {/* HEADER GREETING */}
-          <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4 p-4 rounded-4 border" style={{ backgroundColor: '#090806', borderColor: 'rgba(212,175,55,0.25)' }}>
+          <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4 pb-3 border-bottom" style={{ borderColor: '#dfe3e8' }}>
             <div>
               <div className="d-flex align-items-center gap-2 mb-1">
-                <span className="fs-4"></span>
-                <h1 className="fs-4 font-bold mb-0 text-dark">Welcome Back, </h1>
+                <span className="fs-6 text-uppercase fw-bold" style={{ color: '#6d7175', letterSpacing: '0.05em' }}>CUSTOMER DASHBOARD</span>
               </div>
-              <p className="fs-8 mb-0" style={{ color: '#6d7175' }}>Browse luxury items, track your order shipments, and claim rewards.</p>
             </div>
-            <div className="d-flex align-items-center gap-2">
-              <div className="input-group" style={{ maxWidth: 280 }}>
-                <span className="input-group-text bg-light border-light text-secondary"><Search size={14} /></span>
-                <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search catalog..." className="form-control form-control-sm bg-light text-dark border-light fs-8" />
+            <div className="d-flex align-items-center gap-3">
+              <div className="input-group shadow-sm rounded-pill" style={{ maxWidth: 280, overflow: 'hidden', border: '1px solid #dfe3e8' }}>
+                <span className="input-group-text bg-white border-0 text-secondary pe-1"><Search size={16} /></span>
+                <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search items..." className="form-control form-control-sm bg-white text-dark border-0 fs-8 shadow-none" style={{ outline: 'none' }} />
+              </div>
+              
+              <button onClick={() => setActiveTab('cart')} className="btn btn-sm text-dark position-relative border bg-white p-2 rounded-circle shadow-sm" style={{ borderColor: '#dfe3e8' }}>
+                <ShoppingCart size={18} style={{ color: '#454f5b' }} />
+                {cartItems.length > 0 && (
+                  <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success text-white font-bold fs-9">
+                    {cartItems.length}
+                  </span>
+                )}
+              </button>
+
+              <div className="btn btn-sm bg-light text-dark border rounded-circle d-flex justify-content-center align-items-center shadow-sm" style={{ width: 34, height: 34, fontWeight: 'bold', borderColor: '#dfe3e8' }}>
+                {activeUser?.name?.charAt(0) || 'C'}
               </div>
             </div>
           </div>

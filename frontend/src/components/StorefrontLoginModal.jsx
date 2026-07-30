@@ -42,16 +42,16 @@ export default function StorefrontLoginModal() {
   };
 
   return (
-    <div className="modal-backdrop fade show d-flex align-items-center justify-content-center" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }} onClick={closeLoginModal}>
-      <div className="modal-dialog m-0" style={{ maxWidth: '400px', width: '100%' }} onClick={e => e.stopPropagation()}>
-        <div className="modal-content border-0 shadow-lg rounded-3">
+    <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style={{ backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 1050, backdropFilter: 'blur(3px)' }} onClick={closeLoginModal}>
+      <div className="modal-dialog m-0" style={{ maxWidth: '400px', width: '100%', zIndex: 1060 }} onClick={e => e.stopPropagation()}>
+        <div className="modal-content border-0 shadow-lg rounded-3 bg-white" style={{ opacity: 1 }}>
           <div className="modal-header border-bottom-0 pb-0">
             <button type="button" className="btn-close" onClick={closeLoginModal} aria-label="Close"></button>
           </div>
           <div className="modal-body px-4 pb-4 px-sm-5 pb-sm-5">
             <div className="text-center mb-4">
-              <h2 className="fw-bold fs-3 mb-1">{isRegistering ? 'Create Account' : 'Welcome Back'}</h2>
-              <p className="text-secondary fs-7">{isRegistering ? 'Sign up to start shopping.' : 'Please login to continue shopping.'}</p>
+              <h2 className="fw-bold fs-3 mb-1 text-black">{isRegistering ? 'Create Account' : 'Welcome Back'}</h2>
+              <p className="text-dark fs-7 fw-semibold">{isRegistering ? 'Sign up to start shopping.' : 'Please login to continue shopping.'}</p>
             </div>
 
             {error && (
@@ -63,14 +63,15 @@ export default function StorefrontLoginModal() {
             <form onSubmit={handleSubmit}>
               {isRegistering && (
                 <div className="mb-3">
-                  <label className="form-label text-secondary fs-8 fw-semibold">Full Name</label>
-                  <div className="input-group">
-                    <span className="input-group-text bg-light border-end-0 text-muted">
+                  <label className="form-label text-black fs-8 fw-bold">Full Name</label>
+                  <div className="input-group shadow-sm">
+                    <span className="input-group-text border-end-0 text-dark" style={{ backgroundColor: '#ffffff' }}>
                       <User size={16} />
                     </span>
                     <input
                       type="text"
-                      className="form-control border-start-0 ps-0 bg-light"
+                      className="form-control border-start-0 ps-0 text-dark fw-semibold"
+                      style={{ backgroundColor: '#ffffff', color: '#000' }}
                       required
                       value={name}
                       onChange={(e) => setName(e.target.value)}
@@ -81,14 +82,15 @@ export default function StorefrontLoginModal() {
               )}
 
               <div className="mb-3">
-                <label className="form-label text-secondary fs-8 fw-semibold">Email Address</label>
-                <div className="input-group">
-                  <span className="input-group-text bg-light border-end-0 text-muted">
+                <label className="form-label text-black fs-8 fw-bold">Email Address</label>
+                <div className="input-group shadow-sm">
+                  <span className="input-group-text border-end-0 text-dark" style={{ backgroundColor: '#ffffff' }}>
                     <Mail size={16} />
                   </span>
                   <input
                     type="email"
-                    className="form-control border-start-0 ps-0 bg-light"
+                    className="form-control border-start-0 ps-0 text-dark fw-semibold"
+                    style={{ backgroundColor: '#ffffff', color: '#000' }}
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -98,14 +100,15 @@ export default function StorefrontLoginModal() {
               </div>
 
               <div className="mb-4">
-                <label className="form-label text-secondary fs-8 fw-semibold">Password</label>
-                <div className="input-group">
-                  <span className="input-group-text bg-light border-end-0 text-muted">
+                <label className="form-label text-black fs-8 fw-bold">Password</label>
+                <div className="input-group shadow-sm">
+                  <span className="input-group-text border-end-0 text-dark" style={{ backgroundColor: '#ffffff' }}>
                     <Lock size={16} />
                   </span>
                   <input
                     type="password"
-                    className="form-control border-start-0 ps-0 bg-light"
+                    className="form-control border-start-0 ps-0 text-dark fw-semibold"
+                    style={{ backgroundColor: '#ffffff', color: '#000' }}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -123,9 +126,9 @@ export default function StorefrontLoginModal() {
                 {loading ? 'Processing...' : (isRegistering ? 'Register' : 'Login')}
               </button>
               
-              <div className="text-center fs-7 text-secondary">
+              <div className="text-center fs-6 mt-3 fw-bold text-black">
                 {isRegistering ? 'Already have an account?' : "Don't have an account?"}{' '}
-                <button type="button" className="btn btn-link p-0 text-decoration-none fw-semibold" style={{ color: '#2874f0' }} onClick={toggleMode}>
+                <button type="button" className="btn btn-link p-0 text-decoration-underline fw-bolder fs-6" style={{ color: '#004fe4', marginLeft: '5px' }} onClick={toggleMode}>
                   {isRegistering ? 'Login here' : 'Register here'}
                 </button>
               </div>

@@ -188,18 +188,10 @@ export default function Home() {
           </nav>
 
           <div className="d-flex align-items-center gap-3">
-            <button onClick={() => navigate("/customer-dashboard")} className="btn btn-sm btn-light rounded-circle p-2 position-relative shadow-sm border">
-              <ShoppingCart size={16} className="text-dark" />
-              {cartCount > 0 && (
-                <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success">
-                  {cartCount}
-                </span>
-              )}
-            </button>
             <button onClick={() => navigate("/login")} className="goslot-btn goslot-btn-outline py-1.5 px-3 fs-8">
               Login
             </button>
-            <button onClick={() => navigate("/owner/dashboard")} className="goslot-btn goslot-btn-primary py-1.5 px-3 fs-8">
+            <button onClick={() => navigate("/login")} className="goslot-btn goslot-btn-primary py-1.5 px-3 fs-8">
               <Rocket size={14} /> Start Selling
             </button>
           </div>
@@ -221,10 +213,10 @@ export default function Home() {
             Aureum is the all-in-one platform for vendors to launch their stores and buyers to shop seamlessly. Manage orders, payouts, and catalogs from a central dashboard.
           </p>
           <div className="d-flex flex-wrap align-items-center justify-content-center gap-3 mb-5">
-            <button onClick={() => navigate("/customer-dashboard")} className="goslot-btn goslot-btn-primary fs-6 px-5 py-3">
+            <button onClick={() => navigate("/login")} className="goslot-btn goslot-btn-primary fs-6 px-5 py-3">
               Explore Marketplace <ArrowRight size={18} />
             </button>
-            <button onClick={() => navigate("/owner/dashboard")} className="goslot-btn goslot-btn-outline fs-6 px-5 py-3">
+            <button onClick={() => navigate("/login")} className="goslot-btn goslot-btn-outline fs-6 px-5 py-3">
               Become a Merchant
             </button>
           </div>
@@ -273,7 +265,7 @@ export default function Home() {
               <div className="goslot-eyebrow">Featured Sellers</div>
               <h2 className="fs-3 mb-0">Discover Top Merchant Stores</h2>
             </div>
-            <button onClick={() => navigate("/customer-dashboard")} className="goslot-btn goslot-btn-outline py-2 px-4 fs-8">View All Stores →</button>
+            <button onClick={() => navigate("/login")} className="goslot-btn goslot-btn-outline py-2 px-4 fs-8">View All Stores →</button>
           </div>
           <div className="row g-4">
             {[
@@ -294,7 +286,7 @@ export default function Home() {
                   <div className="fs-8 text-muted mb-3 d-flex align-items-center gap-1">
                     <CheckCircle size={14} className="text-success" /> Verified Owner: {store.owner}
                   </div>
-                  <button onClick={() => navigate("/customer-dashboard")} className="btn btn-sm btn-light w-100 fs-8 fw-semibold border">Visit Store</button>
+                  <button onClick={() => navigate("/login")} className="btn btn-sm btn-light w-100 fs-8 fw-semibold border">Visit Store</button>
                 </div>
               </div>
             ))}
@@ -326,7 +318,7 @@ export default function Home() {
                   <Package size={40} className="text-muted mb-3 mx-auto" />
                   <h3 className="fs-4 mb-2">No Products Listed Yet</h3>
                   <p className="fs-7 text-muted max-w-md mx-auto mb-4">Start your merchant journey by creating a store and listing your first product.</p>
-                  <button onClick={() => navigate("/owner/dashboard")} className="goslot-btn goslot-btn-primary">
+                  <button onClick={() => navigate("/login")} className="goslot-btn goslot-btn-primary">
                     Start Selling Today
                   </button>
                 </div>
@@ -430,7 +422,7 @@ export default function Home() {
               <button onClick={() => setShowRoleModal(false)} className="btn btn-sm btn-light rounded-circle">✕</button>
             </div>
             <div className="d-flex flex-column gap-3">
-              <div onClick={() => { setShowRoleModal(false); navigate("/owner/dashboard"); }} className="p-3 rounded-3 border cursor-pointer d-flex align-items-center gap-3 hover-bg-light transition-all" style={{ background: "white" }}>
+              <div onClick={() => { setShowRoleModal(false); navigate("/login"); }} className="p-3 rounded-3 border cursor-pointer d-flex align-items-center gap-3 hover-bg-light transition-all" style={{ background: "white" }}>
                 <div className="rounded-circle bg-success bg-opacity-10 text-success d-flex align-items-center justify-content-center p-2">
                   <Store size={22} />
                 </div>
@@ -439,7 +431,7 @@ export default function Home() {
                   <div className="fs-8 text-muted">Manage products & catalogs</div>
                 </div>
               </div>
-              <div onClick={() => { setShowRoleModal(false); navigate("/admin/dashboard"); }} className="p-3 rounded-3 border cursor-pointer d-flex align-items-center gap-3 hover-bg-light transition-all" style={{ background: "white" }}>
+              <div onClick={() => { setShowRoleModal(false); navigate("/login"); }} className="p-3 rounded-3 border cursor-pointer d-flex align-items-center gap-3 hover-bg-light transition-all" style={{ background: "white" }}>
                 <div className="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center p-2">
                   <Crown size={22} />
                 </div>
@@ -448,7 +440,7 @@ export default function Home() {
                   <div className="fs-8 text-muted">Platform revenue & operations</div>
                 </div>
               </div>
-              <div onClick={() => { setShowRoleModal(false); navigate("/customer-dashboard"); }} className="p-3 rounded-3 border cursor-pointer d-flex align-items-center gap-3 hover-bg-light transition-all" style={{ background: "white" }}>
+              <div onClick={() => { setShowRoleModal(false); navigate("/login"); }} className="p-3 rounded-3 border cursor-pointer d-flex align-items-center gap-3 hover-bg-light transition-all" style={{ background: "white" }}>
                 <div className="rounded-circle bg-warning bg-opacity-25 text-dark d-flex align-items-center justify-content-center p-2">
                   <ShoppingCart size={22} />
                 </div>

@@ -93,18 +93,22 @@ export default function StorefrontLayout({ storeData, categories = [], products 
                 </button>
               </div>
             ) : (
-              <button className="storefront-login-btn" onClick={openLoginModal}>
+              <button 
+                className="btn bg-white fw-bold px-4 rounded-1 shadow-sm d-flex align-items-center justify-content-center" 
+                style={{ color: '#2874f0', height: '36px', border: 'none' }}
+                onClick={openLoginModal}
+              >
                 Login
               </button>
             )}
 
-            <div className="storefront-nav-item">
-              Become a Seller
-            </div>
+            <Link to="/wishlist" className="storefront-nav-item text-decoration-none">
+              Wishlist
+            </Link>
 
-            <div className="storefront-nav-item">
-              More <ChevronDown size={14} />
-            </div>
+            <Link to="/orders" className="storefront-nav-item text-decoration-none">
+              My Orders
+            </Link>
 
             <Link to="/cart" className="storefront-nav-item cart-item text-decoration-none">
               <div className="position-relative">

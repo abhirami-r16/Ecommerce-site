@@ -44,10 +44,14 @@ body {
   margin: 0;
   padding: 0;
   font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: #040404 !important;
-  color: #f6f1e4 !important;
   -webkit-font-smoothing: antialiased;
   letter-spacing: -0.01em;
+}
+
+.storefront-body {
+  background: #f8f9fa !important;
+  color: #212529 !important;
+  min-height: 100vh;
 }
 
 /* AUREUM Black & Gold Theme Utilities */
@@ -55,18 +59,6 @@ body {
   background: linear-gradient(135deg, #f3d675 0%, #d4af37 50%, #b8860b 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-}
-
-/* GLOBAL GOLD AND WHITE TEXT SPECIFICATION OVERRIDES */
-.text-muted,
-.text-secondary,
-.text-white-50,
-.text-black-50,
-.fs-8.text-muted,
-.fs-7.text-muted,
-.fs-9.text-muted {
-  color: #ffffff !important;
-  opacity: 0.95 !important;
 }
 
 .home-nav-link {
@@ -77,17 +69,8 @@ body {
 }
 
 .home-nav-link:hover {
-  color: #ffffff !important;
-  text-shadow: 0 0 10px rgba(243, 214, 117, 0.5) !important;
-}
-
-h1, h2, h3, h4, h5, h6,
-.h1, .h2, .h3, .h4, .h5, .h6 {
-  color: #ffffff !important;
-}
-
-p, span, div, label, li, a, th, td {
-  color: #ffffff;
+  color: #d4af37 !important;
+  text-shadow: 0 0 10px rgba(243, 214, 117, 0.3) !important;
 }
 
 .text-warning,
@@ -241,32 +224,7 @@ p, span, div, label, li, a, th, td {
   transform: translateY(-3px) !important;
 }
 
-/* Aureum Dark Input Field Overrides (Removes White Inputs & Autofill) */
-input, select, textarea,
-.form-control, .form-select {
-  background-color: #161310 !important;
-  color: #f6f1e4 !important;
-  border-color: rgba(212, 175, 55, 0.25) !important;
-}
 
-input:focus, select:focus, textarea:focus,
-.form-control:focus, .form-select:focus {
-  background-color: #161310 !important;
-  color: #ffffff !important;
-  border-color: #d4af37 !important;
-  box-shadow: 0 0 10px rgba(212, 175, 55, 0.25) !important;
-}
-
-/* Chrome / Safari Autofill Override */
-input:-webkit-autofill,
-input:-webkit-autofill:hover, 
-input:-webkit-autofill:focus,
-textarea:-webkit-autofill,
-select:-webkit-autofill {
-  -webkit-text-fill-color: #f6f1e4 !important;
-  -webkit-box-shadow: 0 0 0px 1000px #161310 inset !important;
-  transition: background-color 5000s ease-in-out 0s !important;
-}
 
 #root {
   min-height: 100vh;

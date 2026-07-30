@@ -22,7 +22,8 @@ export default function Orders() {
       const storeId = activeStore?.id || 1;
       const res = await api.get(`/orders?store_id=${storeId}&status=${statusFilter}&search=${search}`);
       if (Array.isArray(res.data) && res.data.length > 0) {
-        setOrders(res.data);
+        const filteredApiOrders = res.data.filter(o => String(o.store_id) === String(storeId));
+        setOrders(filteredApiOrders);
         setLoading(false);
         return;
       }
@@ -35,9 +36,11 @@ export default function Orders() {
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
+          const storeId = activeStore?.id || 1;
           const dummyNames = ["Rhea Kapoor", "Naveen Rao", "Sana Malik", "Om Prakash", "Ananya Roy"];
           const filtered = parsed
             .filter(o => !dummyNames.includes(o.customer))
+            .filter(o => String(o.store_id) === String(storeId))
             .map(o => ({
               id: o.id,
               order_number: o.id,

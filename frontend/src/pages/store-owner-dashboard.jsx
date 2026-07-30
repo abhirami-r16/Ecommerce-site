@@ -576,7 +576,7 @@ export default function StoreOwnerDashboard() {
             status: o.status || 'Pending',
             pay: o.payment_status || 'Paid',
             date: o.created_at || new Date().toISOString(),
-            items: (o.items || []).map(i => `${i.quantity}x ${i.product_name}`).join(', ') || 'Custom Order'
+            items: o.items || []
           }));
           setOrdersList(backendOrders);
         }
@@ -587,11 +587,16 @@ export default function StoreOwnerDashboard() {
     loadStoreOrders();
   }, [activeStore?.id]);
 
-  // Filter out dummy example orders
+  // Filter out dummy example orders and ensure we only show orders for the ACTIVE store
   const realOrders = React.useMemo(() => {
     const dummyNames = ["Rhea Kapoor", "Naveen Rao", "Sana Malik", "Om Prakash", "Ananya Roy"];
-    return ordersList.filter(o => !dummyNames.includes(o.customer));
-  }, [ordersList]);
+    if (!activeStore?.id) return [];
+    
+    return ordersList.filter(o => 
+      !dummyNames.includes(o.customer) && 
+      String(o.store_id) === String(activeStore.id)
+    );
+  }, [ordersList, activeStore]);
 
   // Derive customers ONLY from this store's orders — never show customers from other stores
   const derivedCustomers = React.useMemo(() => {
@@ -1190,8 +1195,18 @@ export default function StoreOwnerDashboard() {
     closeProductModal();
   };
 
-  const handleUpdateOrderStatus = (orderId, newStatus) => {
+  const handleUpdateOrderStatus = async (orderId, newStatus) => {
+    // Optimistic UI update
     setOrdersList(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+    
+    // Check if orderId is a real backend ID (not a local dummy one starting with #)
+    if (typeof orderId === 'number' || (typeof orderId === 'string' && !orderId.startsWith('#'))) {
+      try {
+        await api.put(`/orders/${orderId}/status`, { status: newStatus });
+      } catch (err) {
+        console.error("Failed to update order status on backend:", err);
+      }
+    }
   };
 
   const adjustStock = (productId, delta) => {
@@ -1214,9 +1229,9 @@ export default function StoreOwnerDashboard() {
 
   // Stats Calculations
   const totalRevenue = "$18,420.00";
-  const totalOrdersCount = ordersList.length;
-  const pendingOrdersCount = ordersList.filter(o => o.status === "Pending" || o.status === "Processing").length;
-  const cancelledOrdersCount = ordersList.filter(o => o.status === "Cancelled").length;
+  const totalOrdersCount = realOrders.length;
+  const pendingOrdersCount = realOrders.filter(o => o.status === "Pending" || o.status === "Processing").length;
+  const cancelledOrdersCount = realOrders.filter(o => o.status === "Cancelled").length;
   const lowStockCount = inventoryList.filter(i => i.stock > 0 && i.stock <= i.reorder).length;
 
   if (loading) {
@@ -1475,7 +1490,9 @@ export default function StoreOwnerDashboard() {
                           <tr key={o.id} style={{ borderBottom: "1px solid #f1f2f4" }}>
                             <td className="border-0 fw-semibold" style={{ color: "#202223" }}>{o.id}</td>
                             <td className="border-0" style={{ color: "#202223" }}>{o.customer}</td>
-                            <td className="border-0 fs-8 fw-medium" style={{ color: "#6d7175" }}>{o.items}</td>
+                            <td className="border-0 fs-8 fw-medium" style={{ color: "#6d7175" }}>
+                              {Array.isArray(o.items) ? o.items.map(i => `${i.quantity || 1}x ${i.product_name || i.name || 'Item'}`).join(', ') || 'Custom Order' : o.items || 'Custom Order'}
+                            </td>
                             <td className="border-0 fw-semibold" style={{ color: "#202223" }}>{o.total}</td>
                             <td className="border-0">
                               <span style={{
@@ -1743,7 +1760,9 @@ export default function StoreOwnerDashboard() {
                           <tr key={o.id} style={{ borderBottom: "1px solid #f1f2f4" }}>
                             <td className="border-0 ps-4 fw-semibold" style={{ color: "#202223" }}>{o.id}</td>
                             <td className="border-0" style={{ color: "#202223" }}>{o.customer}</td>
-                            <td className="border-0 fs-8 fw-medium" style={{ color: "#6d7175" }}>{o.items}</td>
+                            <td className="border-0 fs-8 fw-medium" style={{ color: "#6d7175" }}>
+                              {Array.isArray(o.items) ? o.items.map(i => `${i.quantity || 1}x ${i.product_name || i.name || 'Item'}`).join(', ') || 'Custom Order' : o.items || 'Custom Order'}
+                            </td>
                             <td className="border-0 fs-8" style={{ color: "#6d7175" }}>{o.date}</td>
                             <td className="border-0 fs-8 fw-semibold" style={{ color: "#202223" }}>{o.pay}</td>
                             <td className="border-0 fw-semibold" style={{ color: "#202223" }}>{o.total}</td>
@@ -2189,9 +2208,9 @@ export default function StoreOwnerDashboard() {
                                     ID&nbsp;#{activeStore.id}
                                   </span>
                                 </div>
-                                <span className="fs-8 fw-semibold" style={{ color: "#007f5f" }}>
-                                  https://{activeStore.subdomain || activeStore.slug}.storemanager.app
-                                </span>
+                                <a href={`http://${activeStore.subdomain || activeStore.slug}.localhost:5173`} target="_blank" rel="noopener noreferrer" className="fs-8 fw-semibold text-decoration-none" style={{ color: "#007f5f" }}>
+                                  http://{activeStore.subdomain || activeStore.slug}.localhost:5173
+                                </a>
                               </div>
                               <span style={{ background: "#aee9d1", color: "#007f5f", padding: "2px 8px", borderRadius: "12px", fontSize: "0.75rem", fontWeight: "600" }}>🟢 {activeStore.status || "Active"}</span>
                             </div>
@@ -2620,32 +2639,33 @@ export default function StoreOwnerDashboard() {
       {/* ADD PRODUCT MODAL */}
       {showAddProduct && (
         <div className="position-fixed top-0 bottom-0 start-0 end-0 bg-dark bg-opacity-75 d-flex align-items-center justify-content-center p-3" style={{ zIndex: 1050 }}>
-          <div className="gold-panel w-100" style={{ maxWidth: 420 }}>
-            <div className="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2" style={{ borderColor: "rgba(212,175,55,0.2)" }}>
-              <h3 className="fs-6 font-bold text-warning mb-0">{editingProduct ? `Edit Product` : "Add New Product"}</h3>
-              <button onClick={closeProductModal} className="btn btn-sm text-muted p-0">✕</button>
+          <div className="bg-white rounded-3 shadow w-100 p-4" style={{ maxWidth: 460, border: "1px solid #dfe3e8" }}>
+            <div className="d-flex align-items-center justify-content-between mb-3 border-bottom pb-3" style={{ borderColor: "#dfe3e8" }}>
+              <h3 className="fs-5 font-bold mb-0" style={{ color: "#202223" }}>{editingProduct ? `Edit Product` : "Add New Product"}</h3>
+              <button onClick={closeProductModal} className="btn btn-sm p-0 border-0 bg-transparent" style={{ color: "#6d7175" }}>✕</button>
             </div>
             <form onSubmit={handleAddProductSubmit} className="d-flex flex-column gap-2 fs-7">
               <div>
-                <label className="text-muted mb-1 fs-8">Product Name *</label>
-                <input required value={newProd.name} onChange={(e) => setNewProd({ ...newProd, name: e.target.value })} className="form-control" placeholder="e.g. Silk Scarf" />
+                <label className="mb-1 fs-8 fw-semibold" style={{ color: "#454f5b" }}>Product Name *</label>
+                <input required value={newProd.name} onChange={(e) => setNewProd({ ...newProd, name: e.target.value })} className="form-control" style={{ border: "1px solid #dfe3e8", color: "#202223", backgroundColor: "#fafbfc" }} placeholder="e.g. Silk Scarf" />
               </div>
               <div className="row g-2">
                 <div className="col-6">
-                  <label className="text-muted mb-1 fs-8">Price *</label>
-                  <input required value={newProd.price} onChange={(e) => setNewProd({ ...newProd, price: e.target.value })} className="form-control" placeholder="$34.00" />
+                  <label className="mb-1 fs-8 fw-semibold" style={{ color: "#454f5b" }}>Price *</label>
+                  <input required value={newProd.price} onChange={(e) => setNewProd({ ...newProd, price: e.target.value })} className="form-control" style={{ border: "1px solid #dfe3e8", color: "#202223", backgroundColor: "#fafbfc" }} placeholder="$34.00" />
                 </div>
                 <div className="col-6">
-                  <label className="text-muted mb-1 fs-8">Stock Quantity</label>
-                  <input type="number" min="0" value={newProd.stock} onChange={(e) => setNewProd({ ...newProd, stock: e.target.value })} className="form-control" placeholder="10" />
+                  <label className="mb-1 fs-8 fw-semibold" style={{ color: "#454f5b" }}>Stock Quantity</label>
+                  <input type="number" min="0" value={newProd.stock} onChange={(e) => setNewProd({ ...newProd, stock: e.target.value })} className="form-control" style={{ border: "1px solid #dfe3e8", color: "#202223", backgroundColor: "#fafbfc" }} placeholder="10" />
                 </div>
               </div>
               <div>
-                <label className="text-muted mb-1 fs-8">Category</label>
+                <label className="mb-1 fs-8 fw-semibold" style={{ color: "#454f5b" }}>Category</label>
                 <select
                   value={newProd.category}
                   onChange={(e) => setNewProd({ ...newProd, category: e.target.value })}
                   className="form-select"
+                  style={{ border: "1px solid #dfe3e8", color: "#202223", backgroundColor: "#fafbfc" }}
                   required
                 >
                   <option value="">Select a Collection</option>
@@ -2658,30 +2678,31 @@ export default function StoreOwnerDashboard() {
                 </select>
               </div>
               <div>
-                <label className="text-muted mb-1 fs-8">Product Image URL</label>
+                <label className="mb-1 fs-8 fw-semibold" style={{ color: "#454f5b" }}>Product Image URL</label>
                 <input
                   type="url"
                   value={newProd.image}
                   onChange={(e) => setNewProd({ ...newProd, image: e.target.value })}
                   className="form-control"
+                  style={{ border: "1px solid #dfe3e8", color: "#202223", backgroundColor: "#fafbfc" }}
                   placeholder="https://images.unsplash.com/photo-..."
                 />
                 {newProd.image && (
-                  <div className="mt-2 d-flex align-items-center gap-2 p-1.5 rounded bg-dark border border-secondary">
+                  <div className="mt-2 d-flex align-items-center gap-2 p-2 rounded" style={{ background: "#f9fafb", border: "1px dashed #dfe3e8" }}>
                     <img
                       src={normalizeProductImage(newProd.image, newProd.name)}
                       alt="Preview"
                       className="rounded object-cover"
-                      style={{ width: 40, height: 40 }}
+                      style={{ width: 40, height: 40, border: "1px solid #dfe3e8" }}
                       onError={(e) => {
                         e.target.src = getFallbackImageByName(newProd.name);
                       }}
                     />
-                    <span className="fs-9 text-warning font-mono">✓ Image URL Preview</span>
+                    <span className="fs-9 font-mono fw-semibold" style={{ color: "#007f5f" }}>✓ Image URL Preview</span>
                   </div>
                 )}
               </div>
-              <button type="submit" className="btn btn-gold-primary w-100 mt-3 py-2">{editingProduct ? "Save Changes" : "Add Product"}</button>
+              <button type="submit" className="btn text-white w-100 mt-3 py-2 fw-bold" style={{ background: "#1c2226", borderRadius: "8px" }}>{editingProduct ? "Save Changes" : "Add Product"}</button>
             </form>
           </div>
         </div>
@@ -2690,19 +2711,22 @@ export default function StoreOwnerDashboard() {
       {/* PRINT INVOICE MODAL */}
       {invoiceModalOrder && (
         <div className="position-fixed top-0 bottom-0 start-0 end-0 bg-dark bg-opacity-75 d-flex align-items-center justify-content-center p-3" style={{ zIndex: 1050 }}>
-          <div className="gold-panel w-100" style={{ maxWidth: 450 }}>
-            <div className="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2" style={{ borderColor: "rgba(212,175,55,0.2)" }}>
-              <h3 className="fs-6 font-bold text-warning mb-0">Order Invoice: {invoiceModalOrder.id}</h3>
-              <button onClick={() => setInvoiceModalOrder(null)} className="btn btn-sm text-muted p-0">✕</button>
+          <div className="bg-white rounded-3 shadow w-100 p-4" style={{ maxWidth: 460, border: "1px solid #dfe3e8" }}>
+            <div className="d-flex align-items-center justify-content-between mb-3 border-bottom pb-3" style={{ borderColor: "#dfe3e8" }}>
+              <h3 className="fs-5 font-bold mb-0" style={{ color: "#202223" }}>Order Invoice: {invoiceModalOrder.id}</h3>
+              <button onClick={() => setInvoiceModalOrder(null)} className="btn btn-sm p-0 border-0 bg-transparent" style={{ color: "#6d7175" }}>✕</button>
             </div>
-            <div className="d-flex flex-column gap-2 fs-7 mb-4">
-              <div className="d-flex justify-between"><span className="text-muted">Customer:</span> <strong>{invoiceModalOrder.customer}</strong></div>
-              <div className="d-flex justify-between"><span className="text-muted">Date:</span> <span>{invoiceModalOrder.date}</span></div>
-              <div className="d-flex justify-between"><span className="text-muted">Items:</span> <strong className="text-white">{invoiceModalOrder.items}</strong></div>
-              <div className="d-flex justify-between border-top pt-2 mt-2" style={{ borderColor: "rgba(212,175,55,0.2)" }}><span className="fw-bold">Total:</span> <span className="fw-bold text-warning fs-6">{invoiceModalOrder.total}</span></div>
+            <div className="d-flex flex-column gap-3 fs-7 mb-4">
+              <div className="d-flex justify-content-between"><span style={{ color: "#6d7175" }}>Customer:</span> <strong style={{ color: "#202223" }}>{invoiceModalOrder.customer}</strong></div>
+              <div className="d-flex justify-content-between"><span style={{ color: "#6d7175" }}>Date:</span> <span style={{ color: "#202223" }}>{invoiceModalOrder.date}</span></div>
+              <div className="d-flex justify-content-between"><span style={{ color: "#6d7175" }}>Items:</span> <strong style={{ color: "#202223" }}>{invoiceModalOrder.items}</strong></div>
+              <div className="d-flex justify-content-between border-top pt-3 mt-1" style={{ borderColor: "#dfe3e8" }}>
+                <span className="fw-bold" style={{ color: "#454f5b" }}>Total:</span> 
+                <span className="fw-bold fs-6" style={{ color: "#007f5f" }}>{invoiceModalOrder.total}</span>
+              </div>
             </div>
-            <button onClick={() => { alert(`Printing invoice for ${invoiceModalOrder.id}...`); setInvoiceModalOrder(null); }} className="btn btn-gold-primary w-100">
-              <Printer size={16} className="me-1" /> Print Invoice
+            <button onClick={() => { alert(`Printing invoice for ${invoiceModalOrder.id}...`); setInvoiceModalOrder(null); }} className="btn text-white w-100 py-2 fw-bold" style={{ background: "#1c2226", borderRadius: "8px" }}>
+              <Printer size={16} className="me-2" /> Print Invoice
             </button>
           </div>
         </div>
@@ -2711,35 +2735,37 @@ export default function StoreOwnerDashboard() {
       {/* ADD / EDIT CATEGORY MODAL */}
       {showCategoryModal && (
         <div className="position-fixed top-0 bottom-0 start-0 end-0 bg-dark bg-opacity-75 d-flex align-items-center justify-content-center p-3" style={{ zIndex: 1050 }}>
-          <div className="gold-panel w-100" style={{ maxWidth: 460 }}>
-            <div className="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2" style={{ borderColor: "rgba(212,175,55,0.2)" }}>
-              <h3 className="fs-6 font-bold text-warning mb-0">{editingCategory ? `Edit Category: ${editingCategory.name}` : "Add New Category"}</h3>
-              <button onClick={closeCategoryModal} className="btn btn-sm text-muted p-0 border-0 bg-transparent">✕</button>
+          <div className="bg-white rounded-3 shadow w-100 p-4" style={{ maxWidth: 460, border: "1px solid #dfe3e8" }}>
+            <div className="d-flex align-items-center justify-content-between mb-3 border-bottom pb-3" style={{ borderColor: "#dfe3e8" }}>
+              <h3 className="fs-5 font-bold mb-0" style={{ color: "#202223" }}>{editingCategory ? `Edit Category: ${editingCategory.name}` : "Add New Category"}</h3>
+              <button onClick={closeCategoryModal} className="btn btn-sm p-0 border-0 bg-transparent" style={{ color: "#6d7175" }}>✕</button>
             </div>
             <form onSubmit={handleCategorySubmit} className="d-flex flex-column gap-3 fs-7">
               <div>
-                <label className="text-muted mb-1 fs-8">Category Name *</label>
+                <label className="mb-1 fs-8 fw-semibold" style={{ color: "#454f5b" }}>Category Name *</label>
                 <input
                   required
                   value={categoryForm.name}
                   onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })}
                   className="form-control"
+                  style={{ border: "1px solid #dfe3e8", color: "#202223", backgroundColor: "#fafbfc" }}
                   placeholder="e.g. Luxury Handbags"
                 />
                 {categoryForm.name && (
-                  <div className="fs-8 text-muted mt-1">
-                    Slug URL preview: <span className="text-warning">/{categoryForm.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}</span>
+                  <div className="fs-9 mt-1 fw-medium" style={{ color: "#6d7175" }}>
+                    Slug URL preview: <span style={{ color: "#007f5f" }}>/{categoryForm.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}</span>
                   </div>
                 )}
               </div>
 
               <div>
-                <label className="text-muted mb-1 fs-8">Description</label>
+                <label className="mb-1 fs-8 fw-semibold" style={{ color: "#454f5b" }}>Description</label>
                 <textarea
                   rows="3"
                   value={categoryForm.description}
                   onChange={(e) => setCategoryForm({ ...categoryForm, description: e.target.value })}
                   className="form-control"
+                  style={{ border: "1px solid #dfe3e8", color: "#202223", backgroundColor: "#fafbfc" }}
                   placeholder="Summary of products in this category..."
                 />
               </div>
@@ -2752,16 +2778,16 @@ export default function StoreOwnerDashboard() {
                   onChange={(e) => setCategoryForm({ ...categoryForm, featured: e.target.checked })}
                   className="form-check-input"
                 />
-                <label htmlFor="categoryFeaturedCheck" className="form-check-label text-white fs-7 cursor-pointer">
+                <label htmlFor="categoryFeaturedCheck" className="form-check-label fs-7 cursor-pointer" style={{ color: "#202223" }}>
                   Feature this category on store homepage & navigation
                 </label>
               </div>
 
-              <div className="d-flex align-items-center justify-content-end gap-2 mt-2 pt-2 border-top" style={{ borderColor: "rgba(212,175,55,0.15)" }}>
-                <button type="button" onClick={closeCategoryModal} className="btn btn-sm btn-outline-secondary px-3 py-2">
+              <div className="d-flex align-items-center justify-content-end gap-2 mt-2 pt-3 border-top" style={{ borderColor: "#dfe3e8" }}>
+                <button type="button" onClick={closeCategoryModal} className="btn btn-sm px-3 py-2" style={{ background: "#f1f2f4", color: "#454f5b", border: "1px solid #dfe3e8", borderRadius: "6px", fontWeight: "600" }}>
                   Cancel
                 </button>
-                <button type="submit" className="btn btn-gold-primary btn-sm px-4 py-2">
+                <button type="submit" className="btn btn-sm px-4 py-2 text-white fw-bold" style={{ background: "#1c2226", borderRadius: "6px" }}>
                   {editingCategory ? "Save Changes" : "Create Category"}
                 </button>
               </div>
@@ -2773,23 +2799,23 @@ export default function StoreOwnerDashboard() {
       {/* DELETE CATEGORY CONFIRMATION MODAL */}
       {deletingCategory && (
         <div className="position-fixed top-0 bottom-0 start-0 end-0 bg-dark bg-opacity-75 d-flex align-items-center justify-content-center p-3" style={{ zIndex: 1060 }}>
-          <div className="gold-panel w-100" style={{ maxWidth: 420 }}>
-            <div className="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom" style={{ borderColor: "rgba(212,175,55,0.2)" }}>
-              <h3 className="fs-6 font-bold text-danger mb-0 d-flex align-items-center gap-2">
+          <div className="bg-white rounded-3 shadow w-100 p-4" style={{ maxWidth: 420, border: "1px solid #dfe3e8" }}>
+            <div className="d-flex align-items-center justify-content-between mb-2 pb-3 border-bottom" style={{ borderColor: "#dfe3e8" }}>
+              <h3 className="fs-5 font-bold mb-0 d-flex align-items-center gap-2" style={{ color: "#d82c0d" }}>
                 <AlertTriangle size={18} /> Delete Category
               </h3>
-              <button onClick={() => setDeletingCategory(null)} className="btn btn-sm text-muted p-0 border-0 bg-transparent">✕</button>
+              <button onClick={() => setDeletingCategory(null)} className="btn btn-sm p-0 border-0 bg-transparent" style={{ color: "#6d7175" }}>✕</button>
             </div>
-            <p className="fs-7 text-white mt-2 mb-3">
-              Are you sure you want to delete category <strong className="text-warning">"{deletingCategory.name}"</strong>?
+            <p className="fs-7 mt-3 mb-4" style={{ color: "#202223" }}>
+              Are you sure you want to delete category <strong style={{ color: "#d82c0d" }}>"{deletingCategory.name}"</strong>?
               <br />
-              <span className="fs-8 text-muted">Associated items in product catalog will be reassigned.</span>
+              <span className="fs-8 mt-1 d-block" style={{ color: "#6d7175" }}>Associated items in product catalog will be reassigned.</span>
             </p>
-            <div className="d-flex align-items-center justify-content-end gap-2 pt-2 border-top" style={{ borderColor: "rgba(212,175,55,0.15)" }}>
-              <button onClick={() => setDeletingCategory(null)} className="btn btn-sm btn-outline-secondary px-3 py-2">
+            <div className="d-flex align-items-center justify-content-end gap-2 pt-3 border-top" style={{ borderColor: "#dfe3e8" }}>
+              <button onClick={() => setDeletingCategory(null)} className="btn btn-sm px-3 py-2" style={{ background: "#f1f2f4", color: "#454f5b", border: "1px solid #dfe3e8", borderRadius: "6px", fontWeight: "600" }}>
                 Cancel
               </button>
-              <button onClick={handleDeleteCategoryExecute} className="btn btn-danger btn-sm px-3 py-2">
+              <button onClick={handleDeleteCategoryExecute} className="btn btn-sm px-4 py-2 text-white fw-bold" style={{ background: "#d82c0d", borderRadius: "6px" }}>
                 Delete Category
               </button>
             </div>

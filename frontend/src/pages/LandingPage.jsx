@@ -217,7 +217,7 @@ export default function LandingPage() {
                   <div
                     className="p-3 rounded-3 border shopify-card cursor-pointer d-flex align-items-center justify-content-between"
                     style={{ background: '#f8fafc' }}
-                    onClick={() => { setShowRoleModal(false); navigate('/register'); }}
+                    onClick={() => { setShowRoleModal(false); navigate('/login'); }}
                   >
                     <div className="d-flex align-items-center gap-3">
                       <div className="fs-2">🏬</div>
@@ -233,7 +233,7 @@ export default function LandingPage() {
                   <div
                     className="p-3 rounded-3 border shopify-card cursor-pointer d-flex align-items-center justify-content-between"
                     style={{ background: '#f8fafc' }}
-                    onClick={() => { setShowRoleModal(false); navigate('/storefront'); }}
+                    onClick={() => { setShowRoleModal(false); navigate('/login'); }}
                   >
                     <div className="d-flex align-items-center gap-3">
                       <div className="fs-2">🛍️</div>
