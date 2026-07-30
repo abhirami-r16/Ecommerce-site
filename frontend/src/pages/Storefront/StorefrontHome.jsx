@@ -107,6 +107,9 @@ export default function StorefrontHome({ storeData, products, categories = [] })
             const pCat = (p.category || 'Uncategorized').toLowerCase();
             return String(pCat) === String(cat.id).toLowerCase() || pCat === (cat.name || '').toLowerCase() || pCat === (cat.slug || '').toLowerCase();
           });
+          
+          if (catProducts.length === 0) return null;
+
           const sectionId = cat.slug;
           return (
             <div id={sectionId} key={cat.id || cat.name} className="storefront-section scroll-mt">

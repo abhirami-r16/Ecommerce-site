@@ -29,6 +29,8 @@ class CategoryController extends Controller
 
     public function store(Request $request)
     {
+        \Log::info('Category creation request payload', $request->all());
+
         $validated = $request->validate([
             'store_id'        => 'nullable|integer',
             'store_subdomain' => 'nullable|string|max:255',
@@ -51,8 +53,9 @@ class CategoryController extends Controller
         }
 
         if (!$storeId && !empty($validated['store_subdomain'])) {
-            $store = \App\Models\Store::where('subdomain', $validated['store_subdomain'])
-                ->orWhere('slug', $validated['store_subdomain'])
+            $sub = trim($validated['store_subdomain']);
+            $store = \App\Models\Store::where('subdomain', $sub)
+                ->orWhere('slug', $sub)
                 ->first();
             if ($store) {
                 $storeId = $store->id;
@@ -60,9 +63,23 @@ class CategoryController extends Controller
         }
 
         if (!$storeId && !empty($validated['store_name'])) {
-            $store = \App\Models\Store::whereRaw('LOWER(name) = ?', [strtolower($validated['store_name'])])->first();
+            $name = trim($validated['store_name']);
+            $store = \App\Models\Store::whereRaw('LOWER(name) = ?', [strtolower($name)])
+                ->orWhere('name', 'LIKE', '%' . $name . '%')
+                ->first();
             if ($store) {
                 $storeId = $store->id;
+            }
+        }
+
+        // If STILL no store found, try finding ANY store owned by this user (fallback for orphans)
+        if (!$storeId) {
+            $user_id = $request->input('user_id'); // Try pulling from request directly
+            if ($user_id) {
+                $store = \App\Models\Store::where('user_id', $user_id)->first();
+                if ($store) {
+                    $storeId = $store->id;
+                }
             }
         }
 

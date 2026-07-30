@@ -5,10 +5,22 @@ html {
 }
 
 .storefront-app-root {
-  font-family: Roboto, Arial, sans-serif;
-  background-color: #f1f3f6;
-  min-height: 100vh;
-  color: #212121;
+  font-family: Roboto, Arial, sans-serif !important;
+  background-color: #f1f3f6 !important;
+  min-height: 100vh !important;
+  color: #212121 !important;
+}
+
+.storefront-app-root h1, 
+.storefront-app-root h2, 
+.storefront-app-root h3, 
+.storefront-app-root h4, 
+.storefront-app-root p, 
+.storefront-app-root span, 
+.storefront-app-root div,
+.storefront-app-root label,
+.storefront-app-root li {
+  color: inherit;
 }
 
 .scroll-mt {
@@ -192,10 +204,10 @@ html {
 }
 
 .storefront-section-header h3 {
-  font-size: 22px;
-  font-weight: 500;
-  margin: 0;
-  color: #000000;
+  font-size: 22px !important;
+  font-weight: 500 !important;
+  margin: 0 !important;
+  color: #000000 !important;
 }
 
 .storefront-view-all-btn {
@@ -339,7 +351,7 @@ html {
 
 .storefront-not-found a {
   margin-top: 16px;
-  color: #2874f0;
+  color: #2874f0 !important;
   text-decoration: none;
   font-weight: 500;
 }

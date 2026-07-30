@@ -315,13 +315,27 @@ export default function StoreOwnerDashboard() {
   const mergeOwnerStores = (backendStores, localStores) => {
     const merged = [...(Array.isArray(backendStores) ? backendStores : [])];
     (Array.isArray(localStores) ? localStores : []).forEach((localStore) => {
-      const exists = merged.some((store) =>
-        String(store.id) === String(localStore.id) ||
+      // If a local store has a timestamp ID but matches by name/slug to a backend store, we just discard the local one
+      // because the backend one is the source of truth and contains the real ID.
+      const matchedBackendStore = merged.find((store) =>
         String(store.slug) === String(localStore.slug) ||
         String(store.subdomain) === String(localStore.subdomain) ||
         String(store.name) === String(localStore.name)
       );
-      if (!exists) merged.push(localStore);
+      
+      const exactIdMatch = merged.some(store => String(store.id) === String(localStore.id));
+
+      // Only push the localStore if it doesn't match ANY backend store by ID, Name, Slug, or Subdomain
+      if (!exactIdMatch && !matchedBackendStore) {
+        merged.push(localStore);
+      } else if (matchedBackendStore && String(localStore.id) !== String(matchedBackendStore.id)) {
+        // We found a match by name but the ID is different (likely localStore has a timestamp).
+        // Let's ensure selectedStoreId updates to the real ID if it was pointing to the timestamp.
+        if (String(selectedStoreId) === String(localStore.id)) {
+           setSelectedStoreId(matchedBackendStore.id);
+           localStorage.setItem('shopnest_active_store_id', String(matchedBackendStore.id));
+        }
+      }
     });
     return merged;
   };
@@ -889,6 +903,7 @@ export default function StoreOwnerDashboard() {
       store_id: activeStore?.id ?? null,
       store_subdomain: activeStore?.subdomain || activeStore?.slug || null,
       store_name: activeStore?.name || null,
+      user_id: currentUserId,
     };
 
     if (editingCategory) {
@@ -2599,13 +2614,20 @@ export default function StoreOwnerDashboard() {
               </div>
               <div>
                 <label className="text-muted mb-1 fs-8">Category</label>
-                <input
-                  type="text"
+                <select
                   value={newProd.category}
                   onChange={(e) => setNewProd({ ...newProd, category: e.target.value })}
-                  className="form-control"
-                  placeholder="e.g. Shirts, Pants..."
-                />
+                  className="form-select"
+                  required
+                >
+                  <option value="">Select a Collection</option>
+                  {categoriesList && categoriesList.map(cat => (
+                    <option key={cat.id || cat.name} value={cat.name}>
+                      {cat.name}
+                    </option>
+                  ))}
+                  <option value="Uncategorized">Uncategorized</option>
+                </select>
               </div>
               <div>
                 <label className="text-muted mb-1 fs-8">Product Image URL</label>
