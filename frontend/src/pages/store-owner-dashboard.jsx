@@ -559,6 +559,34 @@ export default function StoreOwnerDashboard() {
     loadStoreProducts();
   }, [activeStore?.id, currentUserId, currentOwnerEmail, ownerMeta]);
 
+  // Load orders from backend
+  useEffect(() => {
+    if (!activeStore?.id) return;
+    const loadStoreOrders = async () => {
+      try {
+        const res = await api.get(`/orders?store_id=${activeStore.id}`);
+        if (Array.isArray(res.data) && res.data.length > 0) {
+          const backendOrders = res.data.map(o => ({
+            id: o.id,
+            store_id: o.store_id,
+            order_number: o.order_number || o.id,
+            customer: o.customer_name || 'Customer',
+            email: o.customer_email || '',
+            total: typeof o.total_amount === 'number' ? `$${o.total_amount.toFixed(2)}` : o.total_amount,
+            status: o.status || 'Pending',
+            pay: o.payment_status || 'Paid',
+            date: o.created_at || new Date().toISOString(),
+            items: (o.items || []).map(i => `${i.quantity}x ${i.product_name}`).join(', ') || 'Custom Order'
+          }));
+          setOrdersList(backendOrders);
+        }
+      } catch (err) {
+        console.debug("Failed to load store orders from backend", err);
+      }
+    };
+    loadStoreOrders();
+  }, [activeStore?.id]);
+
   // Filter out dummy example orders
   const realOrders = React.useMemo(() => {
     const dummyNames = ["Rhea Kapoor", "Naveen Rao", "Sana Malik", "Om Prakash", "Ananya Roy"];

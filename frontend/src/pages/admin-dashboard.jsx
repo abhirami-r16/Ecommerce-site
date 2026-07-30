@@ -402,21 +402,21 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div style={{ background: "#040404", color: "#f6f1e4", minHeight: "100vh" }} className="d-flex w-100">
+    <div style={{ background: "#f1f2f4", color: "#202223", minHeight: "100vh" }} className="admin-root d-flex w-100">
 
       {/* 1. SUPER ADMIN SIDEBAR */}
-      <aside className="store-sidebar d-flex flex-column justify-between p-3" style={{ width: 250, minWidth: 250, background: "#050505", borderRight: "1px solid rgba(212,175,55,0.18)", minHeight: "100vh" }}>
+      <aside className="store-sidebar d-flex flex-column justify-between p-3" style={{ width: 250, minWidth: 250, background: "#f7f7f7", borderRight: "1px solid #dfe3e8", minHeight: "100vh" }}>
         <div>
           {/* Brand Header */}
-          <div className="d-flex align-items-center gap-2 p-2 mb-3 border-bottom" style={{ borderColor: "rgba(212,175,55,0.15)" }}>
-            <div className="brand-icon-box">
-              <Crown size={16} style={{ color: GOLD }} />
+          <div className="d-flex align-items-center gap-2 p-2 mb-3 border-bottom" style={{ borderColor: "#dfe3e8", paddingBottom: "1rem" }}>
+            <div className="brand-icon-box" style={{ background: "#ffffff", border: "1px solid #dfe3e8", color: "#202223", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 8, fontWeight: "bold" }}>
+              A
             </div>
-            <span className="brand-title">AUREUM</span>
+            <span className="brand-title fs-5 fw-bolder tracking-wide" style={{ color: "#202223", letterSpacing: "2px" }}>AUREUM</span>
           </div>
 
           {/* Role Subtitle */}
-          <div className="px-2 pb-2 text-uppercase fs-8 font-semibold tracking-wider" style={{ color: GOLD_LIGHT }}>
+          <div className="px-2 pb-3 text-uppercase fs-8 font-medium tracking-wider" style={{ color: "#6d7175" }}>
             Super Admin Portal
           </div>
 
@@ -429,16 +429,17 @@ export default function AdminDashboard() {
                 <button
                   key={item.key}
                   onClick={() => setActive(item.key)}
-                  className={`sidebar-link d-flex align-items-center gap-3 p-2 rounded-3 border-0 transition-all ${isActive ? "active" : ""}`}
+                  className={`sidebar-link d-flex align-items-center gap-3 p-2.5 rounded-3 border-0 transition-all ${isActive ? "active" : ""}`}
                   style={{
-                    background: isActive ? "rgba(212,175,55,0.14)" : "transparent",
-                    color: isActive ? GOLD_LIGHT : "#8a7a4d",
-                    fontWeight: isActive ? "bold" : "normal",
+                    background: isActive ? "rgba(0,127,95,0.1)" : "transparent",
+                    color: isActive ? "#007f5f" : "#454f5b",
+                    fontWeight: isActive ? "bold" : "600",
+                    borderLeft: isActive ? "3px solid #007f5f" : "3px solid transparent",
                     textAlign: "left"
                   }}
                 >
-                  <Icon size={18} style={{ color: isActive ? GOLD : GOLD_LIGHT }} />
-                  <span style={{ color: GOLD_LIGHT }}>{item.label}</span>
+                  <Icon size={18} style={{ color: isActive ? "#007f5f" : "#6d7175" }} />
+                  <span style={{ color: isActive ? "#007f5f" : "#454f5b" }}>{item.label}</span>
                 </button>
               );
             })}
@@ -446,7 +447,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Sign Out */}
-        <div className="pt-3 border-top" style={{ borderColor: "rgba(212,175,55,0.15)" }}>
+        <div className="pt-3 border-top" style={{ borderColor: "#dfe3e8" }}>
           <button onClick={handleLogout} className="btn btn-sm btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2">
             <LogOut size={16} /> Sign Out
           </button>
@@ -457,27 +458,27 @@ export default function AdminDashboard() {
       <div className="flex-grow-1 d-flex flex-column overflow-hidden" style={{ minWidth: 0 }}>
 
         {/* TOPBAR HEADER */}
-        <header className="store-topbar d-flex align-items-center justify-content-between px-4 py-3" style={{ background: "#050505", borderBottom: "1px solid rgba(212,175,55,0.18)" }}>
+        <header className="store-topbar d-flex align-items-center justify-content-between px-4 py-3" style={{ background: "#f7f7f7", borderBottom: "1px solid #dfe3e8" }}>
           <div>
-            <div className="fs-8 text-uppercase tracking-wider" style={{ color: "#8a7a4d" }}>Executive Dashboard</div>
-            <h1 className="fs-5 font-bold text-white mb-0">Platform Overview & Management</h1>
+            <div className="fs-8 text-uppercase tracking-wider" style={{ color: "#6d7175" }}>Executive Dashboard</div>
+            <h1 className="fs-5 font-bold text-dark mb-0">Platform Overview & Management</h1>
           </div>
           <div className="d-flex align-items-center gap-3">
             <div className="topbar-search-box d-none d-md-block">
               <span className="topbar-search-icon"><Search size={14} /></span>
-              <input placeholder="Search platform..." style={{ background: "#161310", color: "#f6f1e4", border: "1px solid rgba(212,175,55,0.25)" }} />
+              <input placeholder="Search platform..." style={{ background: "#ffffff", color: "#202223", border: "1px solid #dfe3e8" }} />
             </div>
             <div className="topbar-icon-btn">
               <Bell size={16} />
             </div>
-            <div className="w-8 h-8 rounded-circle d-flex align-items-center justify-center font-bold text-xs" style={{ background: `linear-gradient(135deg, ${GOLD}, #8a6d1f)`, color: "#050505" }}>
+            <div className="w-8 h-8 rounded-circle d-flex align-items-center justify-center font-bold text-xs" style={{ background: `linear-gradient(135deg, $"#007f5f", #8a6d1f)`, color: "#050505" }}>
               SA
             </div>
           </div>
         </header>
 
         {/* MAIN BODY AREA */}
-        <main className="p-4 flex-grow-1 overflow-y-auto" style={{ background: "#040404" }}>
+        <main className="p-4 flex-grow-1 overflow-y-auto" style={{ background: "#f1f2f4" }}>
 
           {/* MODULE 1: DASHBOARD OVERVIEW */}
           {active === "dashboard" && (
@@ -486,44 +487,44 @@ export default function AdminDashboard() {
               {/* 6 METRIC STATS CARDS */}
               <div className="row g-3">
                 <div className="col-6 col-md-4 col-lg-2">
-                  <div className="gold-stat-card">
-                    <div className="fs-8 text-muted mb-1">Platform Revenue</div>
-                    <div className="fs-5 font-bold text-white">$84,210</div>
+                  <div style={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: "8px", padding: "16px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
+                    <div className="fs-8 text-secondary mb-1">Platform Revenue</div>
+                    <div className="fs-5 font-bold text-dark">$84,210</div>
                     <div className="fs-8 text-success font-semibold mt-1">+14.2% MTD</div>
                   </div>
                 </div>
                 <div className="col-6 col-md-4 col-lg-2">
-                  <div className="gold-stat-card">
-                    <div className="fs-8 text-muted mb-1">Total Stores</div>
-                    <div className="fs-5 font-bold text-white">{storesList.length}</div>
+                  <div style={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: "8px", padding: "16px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
+                    <div className="fs-8 text-secondary mb-1">Total Stores</div>
+                    <div className="fs-5 font-bold text-dark">{storesList.length}</div>
                     <div className="fs-8 text-success font-semibold mt-1">1,284 Active</div>
                   </div>
                 </div>
                 <div className="col-6 col-md-4 col-lg-2">
-                  <div className="gold-stat-card">
-                    <div className="fs-8 text-muted mb-1">Store Merchants</div>
-                    <div className="fs-5 font-bold text-white">{ownersList.length}</div>
+                  <div style={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: "8px", padding: "16px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
+                    <div className="fs-8 text-secondary mb-1">Store Merchants</div>
+                    <div className="fs-5 font-bold text-dark">{ownersList.length}</div>
                     <div className="fs-8 text-warning font-semibold mt-1">1 Pending</div>
                   </div>
                 </div>
                 <div className="col-6 col-md-4 col-lg-2">
-                  <div className="gold-stat-card">
-                    <div className="fs-8 text-muted mb-1">Total Users</div>
-                    <div className="fs-5 font-bold text-white">45,890</div>
+                  <div style={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: "8px", padding: "16px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
+                    <div className="fs-8 text-secondary mb-1">Total Users</div>
+                    <div className="fs-5 font-bold text-dark">45,890</div>
                     <div className="fs-8 text-success font-semibold mt-1">+18.8%</div>
                   </div>
                 </div>
                 <div className="col-6 col-md-4 col-lg-2">
-                  <div className="gold-stat-card">
-                    <div className="fs-8 text-muted mb-1">Total GMV</div>
-                    <div className="fs-5 font-bold text-white">$2.48M</div>
+                  <div style={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: "8px", padding: "16px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
+                    <div className="fs-8 text-secondary mb-1">Total GMV</div>
+                    <div className="fs-5 font-bold text-dark">$2.48M</div>
                     <div className="fs-8 text-success font-semibold mt-1">+22.4%</div>
                   </div>
                 </div>
                 <div className="col-6 col-md-4 col-lg-2">
-                  <div className="gold-stat-card">
-                    <div className="fs-8 text-muted mb-1">System Uptime</div>
-                    <div className="fs-5 font-bold text-white">99.99%</div>
+                  <div style={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: "8px", padding: "16px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
+                    <div className="fs-8 text-secondary mb-1">System Uptime</div>
+                    <div className="fs-5 font-bold text-dark">99.99%</div>
                     <div className="fs-8 text-emerald-400 font-semibold mt-1">Healthy</div>
                   </div>
                 </div>
@@ -532,42 +533,42 @@ export default function AdminDashboard() {
               {/* CHARTS ROW */}
               <div className="row g-3">
                 <div className="col-12 col-lg-8">
-                  <div className="gold-panel">
+                  <div style={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: "8px", padding: "20px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
                     <div className="d-flex align-items-center justify-content-between mb-3">
                       <div>
-                        <h3 className="fs-6 font-bold text-white mb-0">Platform Revenue & GMV Growth</h3>
-                        <p className="fs-8 text-muted mb-0">Monthly commission fees collected from all stores</p>
+                        <h3 className="fs-6 font-bold text-dark mb-0">Platform Revenue & GMV Growth</h3>
+                        <p className="fs-8 text-secondary mb-0">Monthly commission fees collected from all stores</p>
                       </div>
-                      <span className="gold-badge-amber">YTD 2026</span>
+                      <span className="badge bg-warning text-dark">YTD 2026</span>
                     </div>
                     <ResponsiveContainer width="100%" height={230}>
                       <AreaChart data={platformRevenue}>
                         <defs>
                           <linearGradient id="adminRevGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor={GOLD} stopOpacity={0.45} />
-                            <stop offset="100%" stopColor={GOLD} stopOpacity={0.0} />
+                            <stop offset="0%" stopColor="#007f5f" stopOpacity={0.45} />
+                            <stop offset="100%" stopColor="#007f5f" stopOpacity={0.0} />
                           </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(212,175,55,0.1)" vertical={false} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="#dfe3e8" vertical={false} />
                         <XAxis dataKey="m" tick={{ fontSize: 11, fill: "#8a7a4d" }} axisLine={false} tickLine={false} />
                         <YAxis tick={{ fontSize: 11, fill: "#8a7a4d" }} axisLine={false} tickLine={false} />
-                        <Tooltip contentStyle={{ background: "#0e0d0b", border: "1px solid rgba(212,175,55,0.3)", borderRadius: 8, fontSize: 12, color: "#fff" }} />
-                        <Area type="monotone" dataKey="v" stroke={GOLD} strokeWidth={2.5} fill="url(#adminRevGrad)" />
+                        <Tooltip contentStyle={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: 8, fontSize: 12, color: "#202223" }} />
+                        <Area type="monotone" dataKey="v" stroke="#007f5f" strokeWidth={2.5} fill="url(#adminRevGrad)" />
                       </AreaChart>
                     </ResponsiveContainer>
                   </div>
                 </div>
 
                 <div className="col-12 col-lg-4">
-                  <div className="gold-panel">
-                    <h3 className="fs-6 font-bold text-white mb-1">Category Share</h3>
-                    <p className="fs-8 text-muted mb-3">GMV distribution by category</p>
+                  <div style={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: "8px", padding: "20px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
+                    <h3 className="fs-6 font-bold text-dark mb-1">Category Share</h3>
+                    <p className="fs-8 text-secondary mb-3">GMV distribution by category</p>
                     <ResponsiveContainer width="100%" height={230}>
                       <BarChart data={topCategoriesData} layout="vertical">
                         <XAxis type="number" hide />
                         <YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: "#8a7a4d" }} axisLine={false} tickLine={false} width={90} />
-                        <Tooltip contentStyle={{ background: "#0e0d0b", border: "1px solid rgba(212,175,55,0.3)", borderRadius: 8, fontSize: 12, color: "#fff" }} />
-                        <Bar dataKey="v" fill={GOLD} radius={[0, 4, 4, 0]} barSize={16} />
+                        <Tooltip contentStyle={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: 8, fontSize: 12, color: "#202223" }} />
+                        <Bar dataKey="v" fill="#007f5f" radius={[0, 4, 4, 0]} barSize={16} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -575,15 +576,15 @@ export default function AdminDashboard() {
               </div>
 
               {/* RECENT STORES & MERCHANTS TABLE */}
-              <div className="gold-panel">
+              <div style={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: "8px", padding: "20px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
                 <div className="d-flex align-items-center justify-content-between mb-3">
-                  <h3 className="fs-6 font-bold text-white mb-0">Merchant Network Overview</h3>
+                  <h3 className="fs-6 font-bold text-dark mb-0">Merchant Network Overview</h3>
                   <button onClick={() => setActive("stores")} className="btn btn-link text-warning fs-8 p-0 text-decoration-none">Manage Stores</button>
                 </div>
                 <div className="table-responsive">
-                  <table className="table table-dark table-hover mb-0 align-middle">
+                  <table className="table table-light table-hover mb-0 align-middle">
                     <thead>
-                      <tr className="text-muted fs-8">
+                      <tr className="text-secondary fs-8">
                         <th>Store</th>
                         <th>Category</th>
                         <th>Status</th>
@@ -594,9 +595,9 @@ export default function AdminDashboard() {
                       {storesList.map((s) => (
                         <tr key={s.id}>
                           <td className="fw-bold text-warning">{s.name}</td>
-                          <td className="fs-8 text-muted">{s.category}</td>
+                          <td className="fs-8 text-secondary">{s.category}</td>
                           <td>
-                            <span className={s.status === "Active" ? "gold-badge-emerald" : s.status === "Pending" ? "gold-badge-amber" : "gold-badge-red"}>
+                            <span className={s.status === "Active" ? "badge bg-success text-white" : s.status === "Pending" ? "badge bg-warning text-dark" : "badge bg-danger text-white"}>
                               {s.status}
                             </span>
                           </td>
@@ -620,53 +621,10 @@ export default function AdminDashboard() {
             <div className="d-flex flex-column gap-3">
               <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
                 <div>
-                  <h2 className="fs-4 font-bold text-white mb-0">Global Product Directory</h2>
-                  <p className="fs-8 text-muted mb-0">Browse products across all stores with search and filters.</p>
+                  <h2 className="fs-4 font-bold text-dark mb-0">Global Product Directory</h2>
+                  <p className="fs-8 text-secondary mb-0">Browse products across all stores with search and filters.</p>
                 </div>
-                <div className="d-flex flex-wrap gap-2 align-items-center">
-                  <button onClick={refreshProductsList} className="btn btn-sm btn-outline-warning text-white fs-8 py-1 px-3">
-                    Refresh
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setOwnerOnlyProducts((prev) => !prev)}
-                    className={`btn btn-sm ${ownerOnlyProducts ? 'btn-warning text-dark' : 'btn-outline-secondary text-white'} fs-8 py-1 px-3`}
-                  >
-                    {ownerOnlyProducts ? 'Owner Products Only' : 'All Products'}
-                  </button>
-                  <div className="input-group input-group-sm bg-dark border border-secondary rounded overflow-hidden" style={{ width: 280 }}>
-                    <span className="input-group-text bg-dark border-0 text-muted"><Search size={14} /></span>
-                    <input
-                      value={productSearchQuery}
-                      onChange={(e) => setProductSearchQuery(e.target.value)}
-                      placeholder="Search products..."
-                      className="form-control form-control-sm bg-dark text-white border-0 fs-8"
-                      style={{ minWidth: 140 }}
-                    />
-                  </div>
-                  <select
-                    value={selectedOwnerFilter}
-                    onChange={(e) => setSelectedOwnerFilter(e.target.value)}
-                    className="form-select form-select-sm bg-dark text-white border-secondary fs-8"
-                    style={{ minWidth: 180 }}
-                  >
-                    <option value="all">All Owners</option>
-                    {ownersList.map((owner) => (
-                      <option key={owner.id || owner.email} value={String(owner.id || owner.email)}>{owner.name || owner.email || 'Owner'}</option>
-                    ))}
-                  </select>
-                  <select
-                    value={productStoreFilter}
-                    onChange={(e) => setProductStoreFilter(e.target.value)}
-                    className="form-select form-select-sm bg-dark text-white border-secondary fs-8"
-                    style={{ minWidth: 180 }}
-                  >
-                    <option value="All Stores">All Stores</option>
-                    {storesList.map((store) => (
-                      <option key={store.id} value={store.name}>{store.name}</option>
-                    ))}
-                  </select>
-                </div>
+
               </div>
 
               <div className="d-flex flex-wrap gap-2">
@@ -675,7 +633,7 @@ export default function AdminDashboard() {
                     key={cat}
                     type="button"
                     onClick={() => setProductCategoryFilter(cat)}
-                    className={`btn btn-sm px-3 py-1 rounded-pill fs-8 text-nowrap ${productCategoryFilter === cat ? 'btn-warning text-dark font-bold' : 'btn-outline-secondary text-white'}`}
+                    className={`btn btn-sm px-3 py-1 rounded-pill fs-8 text-nowrap ${productCategoryFilter === cat ? 'btn-warning text-dark font-bold' : 'btn-outline-secondary text-dark'}`}
                   >
                     {cat}
                   </button>
@@ -700,7 +658,7 @@ export default function AdminDashboard() {
                   return matchesSearch && matchesStore && matchesCategory && matchesOwner && matchesOwnerSelection;
                 }).map((product) => (
                   <div key={product.id || product.product_id || `${product.name}-${product.store_name}`} className="col-12 col-sm-6 col-lg-4">
-                    <div className="gold-panel p-3 h-100 d-flex flex-column justify-between">
+                    <div className=" p-3 h-100 d-flex flex-column justify-between" style={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: "8px", padding: "20px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
                       <div>
                         <img
                           src={getProductImageUrl(product)}
@@ -715,13 +673,13 @@ export default function AdminDashboard() {
                             {product.status}
                           </span>
                         </div>
-                        <h4 className="fs-6 font-bold text-white mb-1">{product.name || product.title || 'Unnamed Product'}</h4>
-                        <p className="fs-8 text-muted mb-3 line-clamp-2">{product.description || 'High-quality product available on the Aureum platform.'}</p>
+                        <h4 className="fs-6 font-bold text-dark mb-1">{product.name || product.title || 'Unnamed Product'}</h4>
+                        <p className="fs-8 text-secondary mb-3 line-clamp-2">{product.description || 'High-quality product available on the Aureum platform.'}</p>
                       </div>
                       <div className="d-flex gap-2 align-items-center justify-content-between">
                         <div>
                           <div className="fw-bold text-warning">{typeof product.price === 'number' ? `$${product.price.toFixed(2)}` : product.price || 'N/A'}</div>
-                          <div className="fs-8 text-white">{product.store_name || product.store?.name || 'Unknown Store'}</div>
+                          <div className="fs-8 text-dark">{product.store_name || product.store?.name || 'Unknown Store'}</div>
                         </div>
                       </div>
                     </div>
@@ -744,8 +702,8 @@ export default function AdminDashboard() {
                   return matchesSearch && matchesStore && matchesCategory && matchesOwner && matchesOwnerSelection;
                 }).length === 0 && (
                     <div className="col-12">
-                      <div className="gold-panel text-center py-5">
-                        <p className="fs-8 text-muted mb-0">No products match your search or filters.</p>
+                      <div className=" text-center py-5" style={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: "8px", padding: "20px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
+                        <p className="fs-8 text-secondary mb-0">No products match your search or filters.</p>
                       </div>
                     </div>
                   )}
@@ -757,14 +715,14 @@ export default function AdminDashboard() {
           {active === "stores" && (
             <div className="d-flex flex-column gap-3">
               <div className="d-flex align-items-center justify-content-between">
-                <h2 className="fs-4 font-bold text-white mb-0">Registered Stores</h2>
-                <span className="gold-badge-amber">{storesList.length} Total Stores</span>
+                <h2 className="fs-4 font-bold text-dark mb-0">Registered Stores</h2>
+                <span className="badge bg-warning text-dark">{storesList.length} Total Stores</span>
               </div>
-              <div className="gold-panel">
+              <div style={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: "8px", padding: "20px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
                 <div className="table-responsive">
-                  <table className="table table-dark table-hover mb-0 align-middle">
+                  <table className="table table-light table-hover mb-0 align-middle">
                     <thead>
-                      <tr className="text-muted fs-8">
+                      <tr className="text-secondary fs-8">
                         <th>Store ID</th>
                         <th>Store Name</th>
                         <th>Status</th>
@@ -774,10 +732,10 @@ export default function AdminDashboard() {
                     <tbody>
                       {storesList.map((s) => (
                         <tr key={s.id}>
-                          <td className="fs-8 text-muted">STR-{s.id}</td>
+                          <td className="fs-8 text-secondary">STR-{s.id}</td>
                           <td className="fw-bold text-warning">{s.name}</td>
                           <td>
-                            <span className={s.status === "Active" ? "gold-badge-emerald" : s.status === "Pending" ? "gold-badge-amber" : "gold-badge-red"}>
+                            <span className={s.status === "Active" ? "badge bg-success text-white" : s.status === "Pending" ? "badge bg-warning text-dark" : "badge bg-danger text-white"}>
                               {s.status}
                             </span>
                           </td>
@@ -798,12 +756,12 @@ export default function AdminDashboard() {
           {/* MODULE 4: STORE OWNERS */}
           {active === "owners" && (
             <div className="d-flex flex-column gap-3">
-              <h2 className="fs-4 font-bold text-white mb-0">Merchant Network</h2>
-              <div className="gold-panel">
+              <h2 className="fs-4 font-bold text-dark mb-0">Merchant Network</h2>
+              <div style={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: "8px", padding: "20px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
                 <div className="table-responsive">
-                  <table className="table table-dark table-hover mb-0 align-middle">
+                  <table className="table table-light table-hover mb-0 align-middle">
                     <thead>
-                      <tr className="text-muted fs-8">
+                      <tr className="text-secondary fs-8">
                         <th>Merchant Name</th>
                         <th>Email</th>
                         <th>Assigned Store</th>
@@ -816,13 +774,13 @@ export default function AdminDashboard() {
                     <tbody>
                       {ownersList.map((o) => (
                         <tr key={o.id}>
-                          <td className="fw-bold text-white">{o.name}</td>
-                          <td className="fs-8 text-muted">{o.email}</td>
+                          <td className="fw-bold text-dark">{o.name}</td>
+                          <td className="fs-8 text-secondary">{o.email}</td>
                           <td className="text-warning fs-8">{o.store}</td>
                           <td className="fs-8">{o.commission}</td>
                           <td className="fw-bold text-warning">{o.mrr}</td>
                           <td>
-                            <span className={o.status === "Active" ? "gold-badge-emerald" : o.status === "Pending" ? "gold-badge-amber" : "gold-badge-red"}>
+                            <span className={o.status === "Active" ? "badge bg-success text-white" : o.status === "Pending" ? "badge bg-warning text-dark" : "badge bg-danger text-white"}>
                               {o.status}
                             </span>
                           </td>
@@ -844,14 +802,14 @@ export default function AdminDashboard() {
           {active === "users" && (
             <div className="d-flex flex-column gap-3">
               <div className="d-flex align-items-center justify-content-between">
-                <h2 className="fs-4 font-bold text-white mb-0">Platform User Accounts</h2>
-                <span className="gold-badge-amber">{usersList.length} Registered Users</span>
+                <h2 className="fs-4 font-bold text-dark mb-0">Platform User Accounts</h2>
+                <span className="badge bg-warning text-dark">{usersList.length} Registered Users</span>
               </div>
-              <div className="gold-panel">
+              <div style={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: "8px", padding: "20px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
                 <div className="table-responsive">
-                  <table className="table table-dark table-hover mb-0 align-middle">
+                  <table className="table table-light table-hover mb-0 align-middle">
                     <thead>
-                      <tr className="text-muted fs-8">
+                      <tr className="text-secondary fs-8">
                         <th>User ID</th>
                         <th>Name</th>
                         <th>Email</th>
@@ -863,23 +821,23 @@ export default function AdminDashboard() {
                     <tbody>
                       {usersList.length === 0 ? (
                         <tr>
-                          <td colSpan={8} className="text-center text-muted py-4 fs-8">
+                          <td colSpan={8} className="text-center text-secondary py-4 fs-8">
                             No registered users found.
                           </td>
                         </tr>
                       ) : (
                         usersList.map((u) => (
                           <tr key={u.id}>
-                            <td className="fs-8 text-muted">#{u.id}</td>
-                            <td className="fw-bold text-white">{u.name}</td>
+                            <td className="fs-8 text-secondary">#{u.id}</td>
+                            <td className="fw-bold text-dark">{u.name}</td>
                             <td className="fs-8">{u.email}</td>
                             <td>
-                              <span className={u.role === "Admin" ? "gold-badge-blue" : u.role === "Owner" ? "gold-badge-amber" : "gold-badge-emerald"}>
+                              <span className={u.role === "Admin" ? "gold-badge-blue" : u.role === "Owner" ? "badge bg-warning text-dark" : "badge bg-success text-white"}>
                                 {u.role}
                               </span>
                             </td>
-                            <td className="fs-8 text-muted">{u.registered || "—"}</td>
-                            <td><span className={u.status === "Active" ? "gold-badge-emerald" : "gold-badge-red"}>{u.status}</span></td>
+                            <td className="fs-8 text-secondary">{u.registered || "—"}</td>
+                            <td><span className={u.status === "Active" ? "badge bg-success text-white" : "badge bg-danger text-white"}>{u.status}</span></td>
                           </tr>
                         ))
                       )}
@@ -894,16 +852,16 @@ export default function AdminDashboard() {
           {active === "categories" && (
             <div className="d-flex flex-column gap-3">
               <div className="d-flex align-items-center justify-content-between">
-                <h2 className="fs-4 font-bold text-white mb-0">Platform Categories</h2>
+                <h2 className="fs-4 font-bold text-dark mb-0">Platform Categories</h2>
                 <button onClick={() => setShowAddCatModal(true)} className="btn btn-gold-primary btn-sm px-3 py-2">
                   <Plus size={16} className="me-1" /> Add Category
                 </button>
               </div>
-              <div className="gold-panel">
+              <div style={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: "8px", padding: "20px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
                 <div className="table-responsive">
-                  <table className="table table-dark table-hover mb-0 align-middle">
+                  <table className="table table-light table-hover mb-0 align-middle">
                     <thead>
-                      <tr className="text-muted fs-8">
+                      <tr className="text-secondary fs-8">
                         <th>Category ID</th>
                         <th>Category Name</th>
                         <th>Listed Products</th>
@@ -914,11 +872,11 @@ export default function AdminDashboard() {
                     <tbody>
                       {categoriesList.map((c) => (
                         <tr key={c.id}>
-                          <td className="fs-8 text-muted">CAT-{c.id}</td>
-                          <td className="fw-bold text-white">{c.name}</td>
+                          <td className="fs-8 text-secondary">CAT-{c.id}</td>
+                          <td className="fw-bold text-dark">{c.name}</td>
                           <td className="fw-semibold">{c.count} items</td>
                           <td>
-                            <span className={c.status === "Active" ? "gold-badge-emerald" : c.status === "Featured" ? "gold-badge-amber" : "gold-badge-red"}>
+                            <span className={c.status === "Active" ? "badge bg-success text-white" : c.status === "Featured" ? "badge bg-warning text-dark" : "badge bg-danger text-white"}>
                               {c.status}
                             </span>
                           </td>
@@ -940,21 +898,21 @@ export default function AdminDashboard() {
           {active === "orders" && (
             <div className="d-flex flex-column gap-3">
               <div className="d-flex align-items-center justify-content-between">
-                <h2 className="fs-4 font-bold text-white mb-0">Global Orders Log</h2>
-                <span className="gold-badge-amber">{ordersList.length} Platform Orders</span>
+                <h2 className="fs-4 font-bold text-dark mb-0">Global Orders Log</h2>
+                <span className="badge bg-warning text-dark">{ordersList.length} Platform Orders</span>
               </div>
 
               {orderToast && (
-                <div className="alert alert-success bg-dark text-warning border-warning fs-7 d-flex align-items-center gap-2 mb-0 py-2">
+                <div className="alert alert-success bg-white text-warning border-warning fs-7 d-flex align-items-center gap-2 mb-0 py-2">
                   <CheckCircle size={16} /> {orderToast}
                 </div>
               )}
 
-              <div className="gold-panel">
+              <div style={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: "8px", padding: "20px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
                 <div className="table-responsive">
-                  <table className="table table-dark table-hover mb-0 align-middle">
+                  <table className="table table-light table-hover mb-0 align-middle">
                     <thead>
-                      <tr className="text-muted fs-8">
+                      <tr className="text-secondary fs-8">
                         <th>Order ID</th>
                         <th>Store</th>
                         <th>Total</th>
@@ -967,30 +925,30 @@ export default function AdminDashboard() {
                       {ordersList.map((o) => (
                         <tr key={o.id}>
                           <td className="fw-bold text-warning">{o.id}</td>
-                          <td className="text-white fw-semibold">{o.store}</td>
-                          <td className="fw-bold text-white">{o.total}</td>
+                          <td className="text-dark fw-semibold">{o.store}</td>
+                          <td className="fw-bold text-dark">{o.total}</td>
                           <td className="text-warning font-semibold">{o.fee}</td>
-                          <td className="fs-8 text-muted">{o.date}</td>
+                          <td className="fs-8 text-secondary">{o.date}</td>
                           <td>
                             <select
                               value={o.status}
                               onChange={(e) => handleOrderStatusChange(o.id, e.target.value)}
-                              className="form-select form-select-sm text-white fs-8 py-1 px-2 border-secondary"
+                              className="form-select form-select-sm text-dark fs-8 py-1 px-2 border-light"
                               style={{
                                 background: o.status === "Delivered" || o.status === "Completed" ? "rgba(16,185,129,0.2)" : o.status === "Cancelled" ? "rgba(239,68,68,0.2)" : "rgba(245,158,11,0.2)",
                                 color: o.status === "Delivered" || o.status === "Completed" ? "#10b981" : o.status === "Cancelled" ? "#ef4444" : "#f59e0b",
-                                borderColor: "rgba(212,175,55,0.3)",
+                                borderColor: "#dfe3e8",
                                 fontWeight: "bold",
                                 cursor: "pointer",
                                 minWidth: 135
                               }}
                             >
-                              <option value="Pending" style={{ background: "#0e0d0b", color: "#f59e0b" }}>🟡 Pending</option>
-                              <option value="Processing" style={{ background: "#0e0d0b", color: "#60a5fa" }}>🔵 Processing</option>
-                              <option value="Shipped" style={{ background: "#0e0d0b", color: "#a855f7" }}>🟣 Shipped</option>
-                              <option value="Delivered" style={{ background: "#0e0d0b", color: "#10b981" }}>🟢 Delivered</option>
-                              <option value="Completed" style={{ background: "#0e0d0b", color: "#10b981" }}>🟢 Completed</option>
-                              <option value="Cancelled" style={{ background: "#0e0d0b", color: "#ef4444" }}>🔴 Cancelled</option>
+                              <option value="Pending" style={{ background: "#ffffff", color: "#f59e0b" }}>🟡 Pending</option>
+                              <option value="Processing" style={{ background: "#ffffff", color: "#60a5fa" }}>🔵 Processing</option>
+                              <option value="Shipped" style={{ background: "#ffffff", color: "#a855f7" }}>🟣 Shipped</option>
+                              <option value="Delivered" style={{ background: "#ffffff", color: "#10b981" }}>🟢 Delivered</option>
+                              <option value="Completed" style={{ background: "#ffffff", color: "#10b981" }}>🟢 Completed</option>
+                              <option value="Cancelled" style={{ background: "#ffffff", color: "#ef4444" }}>🔴 Cancelled</option>
                             </select>
                           </td>
                         </tr>
@@ -1005,12 +963,12 @@ export default function AdminDashboard() {
           {/* MODULE 8: PAYMENTS & PAYOUTS */}
           {active === "payments" && (
             <div className="d-flex flex-column gap-3">
-              <h2 className="fs-4 font-bold text-white mb-0">Merchant Payouts & Transfers</h2>
-              <div className="gold-panel">
+              <h2 className="fs-4 font-bold text-dark mb-0">Merchant Payouts & Transfers</h2>
+              <div style={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: "8px", padding: "20px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
                 <div className="table-responsive">
-                  <table className="table table-dark table-hover mb-0 align-middle">
+                  <table className="table table-light table-hover mb-0 align-middle">
                     <thead>
-                      <tr className="text-muted fs-8">
+                      <tr className="text-secondary fs-8">
                         <th>Payout ID</th>
                         <th>Store</th>
                         <th>Merchant</th>
@@ -1023,12 +981,12 @@ export default function AdminDashboard() {
                     <tbody>
                       {payoutsList.map((p) => (
                         <tr key={p.id}>
-                          <td className="fs-8 text-muted">{p.id}</td>
+                          <td className="fs-8 text-secondary">{p.id}</td>
                           <td className="fw-bold text-warning">{p.store}</td>
                           <td>{p.owner}</td>
-                          <td className="fw-bold text-white">{p.amount}</td>
+                          <td className="fw-bold text-dark">{p.amount}</td>
                           <td className="text-warning fs-8">{p.fee}</td>
-                          <td><span className={p.status === "Processed" ? "gold-badge-emerald" : "gold-badge-amber"}>{p.status}</span></td>
+                          <td><span className={p.status === "Processed" ? "badge bg-success text-white" : "badge bg-warning text-dark"}>{p.status}</span></td>
                           <td className="text-end">
                             {p.status === "Pending" && (
                               <button onClick={() => handlePayoutProcess(p.id)} className="btn btn-sm btn-gold-primary fs-8 py-1 px-2">
@@ -1050,8 +1008,8 @@ export default function AdminDashboard() {
             <div className="d-flex flex-column gap-3">
               <div className="d-flex align-items-center justify-content-between">
                 <div>
-                  <h2 className="fs-4 font-bold text-white mb-0">Platform Analytics</h2>
-                  <p className="fs-8 mb-0 text-muted">Comprehensive performance insights across stores, merchants, revenue, and category demand.</p>
+                  <h2 className="fs-4 font-bold text-dark mb-0">Platform Analytics</h2>
+                  <p className="fs-8 mb-0 text-secondary">Comprehensive performance insights across stores, merchants, revenue, and category demand.</p>
                 </div>
                 <button onClick={() => alert("Exporting analytics snapshot...")} className="btn btn-outline-warning btn-sm">
                   <Download size={16} className="me-1" /> Export Analytics
@@ -1060,30 +1018,30 @@ export default function AdminDashboard() {
 
               <div className="row g-3">
                 <div className="col-6 col-lg-3">
-                  <div className="gold-stat-card">
-                    <div className="fs-8 text-muted mb-1">Net Revenue</div>
-                    <div className="fs-5 font-bold text-white">$84,210</div>
+                  <div style={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: "8px", padding: "16px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
+                    <div className="fs-8 text-secondary mb-1">Net Revenue</div>
+                    <div className="fs-5 font-bold text-dark">$84,210</div>
                     <div className="fs-8 text-success font-semibold mt-1">+14.2% vs last month</div>
                   </div>
                 </div>
                 <div className="col-6 col-lg-3">
-                  <div className="gold-stat-card">
-                    <div className="fs-8 text-muted mb-1">Orders Processed</div>
-                    <div className="fs-5 font-bold text-white">{ordersList.length}</div>
+                  <div style={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: "8px", padding: "16px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
+                    <div className="fs-8 text-secondary mb-1">Orders Processed</div>
+                    <div className="fs-5 font-bold text-dark">{ordersList.length}</div>
                     <div className="fs-8 text-warning font-semibold mt-1">Live platform orders</div>
                   </div>
                 </div>
                 <div className="col-6 col-lg-3">
-                  <div className="gold-stat-card">
-                    <div className="fs-8 text-muted mb-1">Active Stores</div>
-                    <div className="fs-5 font-bold text-white">{storesList.length}</div>
+                  <div style={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: "8px", padding: "16px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
+                    <div className="fs-8 text-secondary mb-1">Active Stores</div>
+                    <div className="fs-5 font-bold text-dark">{storesList.length}</div>
                     <div className="fs-8 text-success font-semibold mt-1">Healthy merchant base</div>
                   </div>
                 </div>
                 <div className="col-6 col-lg-3">
-                  <div className="gold-stat-card">
-                    <div className="fs-8 text-muted mb-1">Avg. Order Value</div>
-                    <div className="fs-5 font-bold text-white">$1,840</div>
+                  <div style={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: "8px", padding: "16px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
+                    <div className="fs-8 text-secondary mb-1">Avg. Order Value</div>
+                    <div className="fs-5 font-bold text-dark">$1,840</div>
                     <div className="fs-8 text-emerald-400 font-semibold mt-1">High-value basket</div>
                   </div>
                 </div>
@@ -1091,42 +1049,42 @@ export default function AdminDashboard() {
 
               <div className="row g-3">
                 <div className="col-12 col-lg-8">
-                  <div className="gold-panel">
+                  <div style={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: "8px", padding: "20px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
                     <div className="d-flex align-items-center justify-content-between mb-3">
                       <div>
-                        <h3 className="fs-6 font-bold text-white mb-0">Revenue Trend</h3>
-                        <p className="fs-8 text-muted mb-0">Monthly growth across the platform.</p>
+                        <h3 className="fs-6 font-bold text-dark mb-0">Revenue Trend</h3>
+                        <p className="fs-8 text-secondary mb-0">Monthly growth across the platform.</p>
                       </div>
-                      <span className="gold-badge-amber">YTD 2026</span>
+                      <span className="badge bg-warning text-dark">YTD 2026</span>
                     </div>
                     <ResponsiveContainer width="100%" height={240}>
                       <AreaChart data={platformRevenue}>
                         <defs>
                           <linearGradient id="analyticsRevenueGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor={GOLD} stopOpacity={0.42} />
-                            <stop offset="100%" stopColor={GOLD} stopOpacity={0.0} />
+                            <stop offset="0%" stopColor="#007f5f" stopOpacity={0.42} />
+                            <stop offset="100%" stopColor="#007f5f" stopOpacity={0.0} />
                           </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(212,175,55,0.1)" vertical={false} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="#dfe3e8" vertical={false} />
                         <XAxis dataKey="m" tick={{ fontSize: 11, fill: "#8a7a4d" }} axisLine={false} tickLine={false} />
                         <YAxis tick={{ fontSize: 11, fill: "#8a7a4d" }} axisLine={false} tickLine={false} />
-                        <Tooltip contentStyle={{ background: "#0e0d0b", border: "1px solid rgba(212,175,55,0.3)", borderRadius: 8, fontSize: 12, color: "#fff" }} />
-                        <Area type="monotone" dataKey="v" stroke={GOLD} strokeWidth={2.5} fill="url(#analyticsRevenueGrad)" />
+                        <Tooltip contentStyle={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: 8, fontSize: 12, color: "#202223" }} />
+                        <Area type="monotone" dataKey="v" stroke="#007f5f" strokeWidth={2.5} fill="url(#analyticsRevenueGrad)" />
                       </AreaChart>
                     </ResponsiveContainer>
                   </div>
                 </div>
 
                 <div className="col-12 col-lg-4">
-                  <div className="gold-panel">
-                    <h3 className="fs-6 font-bold text-white mb-1">Category Demand</h3>
-                    <p className="fs-8 text-muted mb-3">Top categories by platform activity.</p>
+                  <div style={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: "8px", padding: "20px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
+                    <h3 className="fs-6 font-bold text-dark mb-1">Category Demand</h3>
+                    <p className="fs-8 text-secondary mb-3">Top categories by platform activity.</p>
                     <ResponsiveContainer width="100%" height={240}>
                       <BarChart data={topCategoriesData} layout="vertical">
                         <XAxis type="number" hide />
                         <YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: "#8a7a4d" }} axisLine={false} tickLine={false} width={90} />
-                        <Tooltip contentStyle={{ background: "#0e0d0b", border: "1px solid rgba(212,175,55,0.3)", borderRadius: 8, fontSize: 12, color: "#fff" }} />
-                        <Bar dataKey="v" fill={GOLD} radius={[0, 4, 4, 0]} barSize={16} />
+                        <Tooltip contentStyle={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: 8, fontSize: 12, color: "#202223" }} />
+                        <Bar dataKey="v" fill="#007f5f" radius={[0, 4, 4, 0]} barSize={16} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -1135,18 +1093,18 @@ export default function AdminDashboard() {
 
               <div className="row g-3">
                 <div className="col-12 col-lg-6">
-                  <div className="gold-panel">
-                    <h3 className="fs-6 font-bold text-white mb-3">Top Merchant Performance</h3>
+                  <div style={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: "8px", padding: "20px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
+                    <h3 className="fs-6 font-bold text-dark mb-3">Top Merchant Performance</h3>
                     <div className="d-flex flex-column gap-2">
                       {storesList.slice(0, 4).map((store, index) => (
-                        <div key={store.id} className="d-flex align-items-center justify-content-between rounded-2 p-2" style={{ background: "rgba(212,175,55,0.08)", border: "1px solid rgba(212,175,55,0.15)" }}>
+                        <div key={store.id} className="d-flex align-items-center justify-content-between rounded-2 p-2" style={{ background: "rgba(212,175,55,0.08)", border: "1px solid #dfe3e8" }}>
                           <div>
-                            <div className="fw-semibold text-white">{store.name}</div>
-                            <div className="fs-8 text-muted">{store.category || "Premium Store"}</div>
+                            <div className="fw-semibold text-dark">{store.name}</div>
+                            <div className="fs-8 text-secondary">{store.category || "Premium Store"}</div>
                           </div>
                           <div className="text-end">
                             <div className="fw-bold text-warning">#{index + 1}</div>
-                            <div className="fs-8 text-muted">{store.status || "Active"}</div>
+                            <div className="fs-8 text-secondary">{store.status || "Active"}</div>
                           </div>
                         </div>
                       ))}
@@ -1155,8 +1113,8 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="col-12 col-lg-6">
-                  <div className="gold-panel">
-                    <h3 className="fs-6 font-bold text-white mb-3">Revenue Split</h3>
+                  <div style={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: "8px", padding: "20px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
+                    <h3 className="fs-6 font-bold text-dark mb-3">Revenue Split</h3>
                     <div style={{ width: "100%", height: 220 }}>
                       <ResponsiveContainer>
                         <PieChart>
@@ -1179,15 +1137,15 @@ export default function AdminDashboard() {
                             <Cell fill="#8a6d1f" />
                             <Cell fill="#bfa24a" />
                           </Pie>
-                          <Tooltip contentStyle={{ background: "#0e0d0b", border: "1px solid rgba(212,175,55,0.3)", borderRadius: 8, fontSize: 12, color: "#fff" }} />
+                          <Tooltip contentStyle={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: 8, fontSize: 12, color: "#202223" }} />
                         </PieChart>
                       </ResponsiveContainer>
                     </div>
                     <div className="d-flex flex-wrap gap-2 mt-2">
-                      <span className="gold-badge-amber">Apparel 42%</span>
-                      <span className="gold-badge-amber">Electronics 28%</span>
-                      <span className="gold-badge-amber">Home Decor 20%</span>
-                      <span className="gold-badge-amber">Textiles 10%</span>
+                      <span className="badge bg-warning text-dark">Apparel 42%</span>
+                      <span className="badge bg-warning text-dark">Electronics 28%</span>
+                      <span className="badge bg-warning text-dark">Home Decor 20%</span>
+                      <span className="badge bg-warning text-dark">Textiles 10%</span>
                     </div>
                   </div>
                 </div>
@@ -1199,25 +1157,25 @@ export default function AdminDashboard() {
           {active === "reports" && (
             <div className="d-flex flex-column gap-3">
               <div className="d-flex align-items-center justify-content-between">
-                <h2 className="fs-4 font-bold text-white mb-0">Platform Audit Reports</h2>
+                <h2 className="fs-4 font-bold text-dark mb-0">Platform Audit Reports</h2>
                 <button onClick={() => alert("Downloading Platform Financial Audit Report CSV...")} className="btn btn-outline-warning btn-sm">
                   <Download size={16} className="me-1" /> Export CSV Report
                 </button>
               </div>
               <div className="row g-3">
                 <div className="col-md-6">
-                  <div className="gold-panel">
-                    <h3 className="fs-6 font-bold text-white mb-2">Platform Financial Summary</h3>
-                    <div className="fs-7 text-muted mb-3">Gross GMV processed: <strong className="text-white">$2,480,000.00</strong></div>
-                    <div className="fs-7 text-muted mb-3">Platform Net Revenue: <strong className="text-warning">$84,210.00</strong></div>
-                    <div className="fs-7 text-muted">Active Merchants Payouts: <strong className="text-white">$2,395,790.00</strong></div>
+                  <div style={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: "8px", padding: "20px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
+                    <h3 className="fs-6 font-bold text-dark mb-2">Platform Financial Summary</h3>
+                    <div className="fs-7 text-secondary mb-3">Gross GMV processed: <strong className="text-dark">$2,480,000.00</strong></div>
+                    <div className="fs-7 text-secondary mb-3">Platform Net Revenue: <strong className="text-warning">$84,210.00</strong></div>
+                    <div className="fs-7 text-secondary">Active Merchants Payouts: <strong className="text-dark">$2,395,790.00</strong></div>
                   </div>
                 </div>
                 <div className="col-md-6">
-                  <div className="gold-panel">
-                    <h3 className="fs-6 font-bold text-white mb-2">Tax & Compliance Status</h3>
+                  <div style={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: "8px", padding: "20px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
+                    <h3 className="fs-6 font-bold text-dark mb-2">Tax & Compliance Status</h3>
                     <div className="fs-7 text-emerald-400 mb-2">✓ 100% Tax Compliant</div>
-                    <div className="fs-7 text-muted">All vendor payouts undergo 256-bit SSL encryption & Stripe Connect verification.</div>
+                    <div className="fs-7 text-secondary">All vendor payouts undergo 256-bit SSL encryption & Stripe Connect verification.</div>
                   </div>
                 </div>
               </div>
@@ -1227,24 +1185,24 @@ export default function AdminDashboard() {
           {/* MODULE 10: SETTINGS */}
           {active === "settings" && (
             <div className="d-flex flex-column gap-3">
-              <h2 className="fs-4 font-bold text-white mb-0">Super Admin Global Settings</h2>
+              <h2 className="fs-4 font-bold text-dark mb-0">Super Admin Global Settings</h2>
               {settingsSaved && (
-                <div className="alert alert-success bg-dark text-success border-success fs-7">
+                <div className="alert alert-success bg-white text-success border-success fs-7">
                   Platform global settings saved successfully!
                 </div>
               )}
-              <div className="gold-panel col-12 col-md-6">
+              <div className=" col-12 col-md-6" style={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: "8px", padding: "20px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
                 <form onSubmit={handleSaveConfig} className="d-flex flex-column gap-3 fs-7">
                   <div>
-                    <label className="text-muted mb-1 fs-8">Platform Title</label>
+                    <label className="text-secondary mb-1 fs-8">Platform Title</label>
                     <input value={platformConfig.name} onChange={(e) => setPlatformConfig({ ...platformConfig, name: e.target.value })} className="form-control" />
                   </div>
                   <div>
-                    <label className="text-muted mb-1 fs-8">Default Merchant Commission Fee (%)</label>
+                    <label className="text-secondary mb-1 fs-8">Default Merchant Commission Fee (%)</label>
                     <input value={platformConfig.commission} onChange={(e) => setPlatformConfig({ ...platformConfig, commission: e.target.value })} className="form-control" />
                   </div>
                   <div>
-                    <label className="text-muted mb-1 fs-8">Payout Cycle Schedule</label>
+                    <label className="text-secondary mb-1 fs-8">Payout Cycle Schedule</label>
                     <select value={platformConfig.payoutCycle} onChange={(e) => setPlatformConfig({ ...platformConfig, payoutCycle: e.target.value })} className="form-select">
                       <option value="Weekly (Mondays)">Weekly (Mondays)</option>
                       <option value="Bi-Weekly">Bi-Weekly</option>
@@ -1252,7 +1210,7 @@ export default function AdminDashboard() {
                     </select>
                   </div>
                   <div>
-                    <label className="text-muted mb-1 fs-8">Super Admin Email</label>
+                    <label className="text-secondary mb-1 fs-8">Super Admin Email</label>
                     <input value={platformConfig.supportEmail} onChange={(e) => setPlatformConfig({ ...platformConfig, supportEmail: e.target.value })} className="form-control" />
                   </div>
                   <button type="submit" className="btn btn-gold-primary py-2 mt-2">Save Global Configuration</button>
@@ -1266,19 +1224,19 @@ export default function AdminDashboard() {
 
       {/* ADD CATEGORY MODAL */}
       {showAddCatModal && (
-        <div className="position-fixed top-0 bottom-0 start-0 end-0 bg-dark bg-opacity-75 d-flex align-items-center justify-content-center p-3" style={{ zIndex: 1050 }}>
-          <div className="gold-panel w-100" style={{ maxWidth: 400 }}>
+        <div className="position-fixed top-0 bottom-0 start-0 end-0 bg-white bg-opacity-75 d-flex align-items-center justify-content-center p-3" style={{ zIndex: 1050 }}>
+          <div className=" w-100" style={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: "8px", padding: "20px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }} style={{ maxWidth: 400 }}>
             <div className="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2" style={{ borderColor: "rgba(212,175,55,0.2)" }}>
               <h3 className="fs-6 font-bold text-warning mb-0">Create Global Category</h3>
-              <button onClick={() => setShowAddCatModal(false)} className="btn btn-sm text-muted p-0">✕</button>
+              <button onClick={() => setShowAddCatModal(false)} className="btn btn-sm text-secondary p-0">✕</button>
             </div>
             <form onSubmit={handleAddCategorySubmit} className="d-flex flex-column gap-2 fs-7">
               <div>
-                <label className="text-muted mb-1 fs-8">Category Title *</label>
+                <label className="text-secondary mb-1 fs-8">Category Title *</label>
                 <input required value={newCatName} onChange={(e) => setNewCatName(e.target.value)} className="form-control" placeholder="e.g. Fine Jewelry" />
               </div>
               <div>
-                <label className="text-muted mb-1 fs-8">Platform Fee (%)</label>
+                <label className="text-secondary mb-1 fs-8">Platform Fee (%)</label>
                 <input value={newCatFee} onChange={(e) => setNewCatFee(e.target.value)} className="form-control" placeholder="4.5%" />
               </div>
               <button type="submit" className="btn btn-gold-primary w-100 mt-3 py-2">Add Category</button>

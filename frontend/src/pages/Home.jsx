@@ -1,51 +1,156 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Sparkles, ArrowRight, Play, Shield, Clock, RefreshCw, Search, Bell, User,
-  ChevronDown, Store, Package, Users, ShoppingCart, DollarSign, Globe,
-  CheckCircle, Star, Heart, Layers, ShieldCheck, Zap, Headphones, X, Plus,
-  TrendingUp, BarChart2, Eye, Activity, Check, Crown, Flame, Mail, Send, Award, Gift, Truck, Tag, ExternalLink, Rocket
+  Sparkles, ArrowRight, ShieldCheck, Zap, Store, Package, ShoppingCart, DollarSign, 
+  CheckCircle, Star, Rocket, Crown, Mail, Check
 } from "lucide-react";
 
-const GOLD = "#D4AF37";
-const GOLD_LIGHT = "#F3D675";
-const GOLD_DEEP = "#B8860B";
+const goslotStyles = `
+  .goslot-theme {
+    --primary: #2E7D32;
+    --primary-dark: #1B5E20;
+    --secondary: #43A047;
+    --accent: #FFB300;
+    --bg: #F8FAF7;
+    --dark: #1F2937;
+    --white: #FFFFFF;
+    --ink: #16241A;
+    --muted: #5B6B60;
+    --line: rgba(31, 41, 55, 0.08);
+    background: var(--bg);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  .goslot-theme h1, .goslot-theme h2, .goslot-theme h3, .goslot-theme h4 {
+    color: var(--dark) !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.02em !important;
+  }
+  .goslot-theme p, .goslot-theme span, .goslot-theme div, .goslot-theme li, .goslot-theme a {
+    color: var(--ink) !important;
+  }
+  .goslot-theme p {
+    color: var(--muted) !important;
+    line-height: 1.7 !important;
+  }
+  .goslot-theme .text-dark, .goslot-theme .text-muted, .goslot-theme .fs-8.text-muted, .goslot-theme .fs-7.text-muted, .goslot-theme .fs-9.text-muted {
+    color: var(--dark) !important;
+  }
+  .goslot-theme .text-success {
+    color: var(--primary) !important;
+  }
+  .goslot-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 24px;
+    font-weight: 600;
+    border-radius: 999px;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+  }
+  .goslot-btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: var(--white);
+    box-shadow: 0 8px 24px rgba(46, 125, 50, 0.28);
+  }
+  .goslot-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 32px rgba(46, 125, 50, 0.36);
+    color: white;
+  }
+  .goslot-btn-outline {
+    background: white;
+    border: 1px solid rgba(31, 41, 55, 0.16);
+    color: var(--dark);
+  }
+  .goslot-btn-outline:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    transform: translateY(-2px);
+  }
+  .goslot-eyebrow {
+    display: inline-block;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--primary);
+    background: rgba(46, 125, 50, 0.08);
+    padding: 6px 14px;
+    border-radius: 999px;
+    margin-bottom: 16px;
+  }
+  .goslot-hero {
+    padding-top: 140px;
+    padding-bottom: 100px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.35;
+    z-index: 0;
+    animation: blobFloat 14s ease-in-out infinite;
+  }
+  .blob-1 {
+    width: 420px; height: 420px;
+    background: var(--secondary);
+    top: -120px; right: -80px;
+  }
+  .blob-2 {
+    width: 320px; height: 320px;
+    background: var(--accent);
+    bottom: -100px; left: -60px;
+    animation-delay: -6s;
+  }
+  @keyframes blobFloat {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(30px, -30px) scale(1.08); }
+  }
+  .goslot-card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 12px rgba(31, 41, 55, 0.04);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .goslot-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(31, 41, 55, 0.1);
+  }
+  .goslot-header {
+    background: rgba(248, 250, 247, 0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--line);
+  }
+  .goslot-nav-link {
+    color: var(--dark);
+    font-weight: 600;
+    text-decoration: none;
+    position: relative;
+    padding: 4px 0;
+    transition: color 0.2s ease;
+  }
+  .goslot-nav-link:hover {
+    color: var(--primary);
+  }
+`;
 
 export default function Home() {
   const navigate = useNavigate();
-
-  // Modals & States
-  const [showDemoModal, setShowDemoModal] = useState(false);
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [quickViewProduct, setQuickViewProduct] = useState(null);
   const [cartCount, setCartCount] = useState(2);
-  const [wishlist, setWishlist] = useState({});
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [newsletterSuccess, setNewsletterSuccess] = useState(false);
-  const [activeHeroTab, setActiveHeroTab] = useState("overview");
-
-  // Flash Sale Countdown Timer (State in seconds)
-  const [timeLeft, setTimeLeft] = useState(8130); // 2h 15m 30s
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 8130));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const formatTime = (seconds) => {
-    const hrs = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    return `${hrs.toString().padStart(2, "0")}h : ${mins.toString().padStart(2, "0")}m : ${secs.toString().padStart(2, "0")}s`;
-  };
-
-  const revenueChartPoints = "0,160 50,140 100,145 150,110 200,120 250,80 300,50";
-
-  const toggleWishlist = (id) => {
-    setWishlist((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
 
   const handleAddToCart = (e, prod) => {
     e.stopPropagation();
@@ -61,196 +166,98 @@ export default function Home() {
   };
 
   return (
-    <div style={{ backgroundColor: "#040404", color: "#f6f1e4", minHeight: "100vh", position: "relative", overflowX: "hidden" }}>
-      
-      {/* 🌟 LUXURY BLACK & GOLD AMBIENT BACKGROUND GLOWS & GOLDEN PARTICLE WAVES */}
-      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "100%", pointerEvents: "none", zIndex: 0, overflow: "hidden" }}>
-        <div style={{ position: "absolute", top: -150, left: "50%", transform: "translateX(-50%)", width: 1200, height: 700, background: "radial-gradient(ellipse at center, rgba(212,175,55,0.28) 0%, rgba(212,175,55,0.09) 45%, rgba(4,4,4,0) 75%)", filter: "blur(60px)" }} />
-        <div style={{ position: "absolute", top: 350, right: "2%", width: 600, height: 600, background: "radial-gradient(circle, rgba(243,214,117,0.15) 0%, rgba(4,4,4,0) 70%)", filter: "blur(70px)" }} />
-        <div style={{ position: "absolute", top: 1100, left: "-5%", width: 500, height: 500, background: "radial-gradient(circle, rgba(212,175,55,0.12) 0%, rgba(4,4,4,0) 70%)", filter: "blur(70px)" }} />
+    <div className="goslot-theme">
+      <style dangerouslySetInnerHTML={{ __html: goslotStyles }} />
 
-        {/* SVG Golden Wave Stream */}
-        <svg style={{ position: "absolute", top: 100, left: 0, width: "100%", height: 650, opacity: 0.45 }} viewBox="0 0 1440 650" fill="none">
-          <defs>
-            <linearGradient id="goldWave1" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#d4af37" stopOpacity="0.1" />
-              <stop offset="50%" stopColor="#f3d675" stopOpacity="0.85" />
-              <stop offset="100%" stopColor="#b8860b" stopOpacity="0.2" />
-            </linearGradient>
-            <linearGradient id="goldWave2" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#8a6d1f" stopOpacity="0.2" />
-              <stop offset="60%" stopColor="#f3d675" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="#d4af37" stopOpacity="0.1" />
-            </linearGradient>
-          </defs>
-          <path d="M-100 480 C 250 300, 550 550, 950 320 C 1200 200, 1450 380, 1600 300" stroke="url(#goldWave1)" strokeWidth="2.5" />
-          <path d="M-100 510 C 250 330, 550 580, 950 350 C 1200 230, 1450 410, 1600 330" stroke="url(#goldWave2)" strokeWidth="1.5" strokeDasharray="6 8" />
-        </svg>
-
-        {/* Floating Sparkles */}
-        <div style={{ position: "absolute", top: 180, left: "12%", color: "#f3d675", opacity: 0.8, fontSize: 14 }}>✦</div>
-        <div style={{ position: "absolute", top: 280, left: "45%", color: "#d4af37", opacity: 0.9, fontSize: 16 }}>✨</div>
-        <div style={{ position: "absolute", top: 140, right: "25%", color: "#f3d675", opacity: 0.9, fontSize: 18 }}>✦</div>
-      </div>
-
-      {/* 2. NAVIGATION BAR */}
-      <header className="sticky-top border-bottom py-3" style={{ backgroundColor: "rgba(4,4,4,0.92)", borderColor: "rgba(212,175,55,0.25)", backdropFilter: "blur(16px)", zIndex: 40 }}>
+      {/* HEADER */}
+      <header className="fixed-top goslot-header py-3" style={{ zIndex: 1040 }}>
         <div className="container-xl d-flex align-items-center justify-content-between">
-          
-          {/* Logo */}
-          <div className="d-flex align-items-center gap-3" style={{ cursor: "pointer" }} onClick={() => navigate("/")}>
-            <div className="brand-icon-box">
-              <Sparkles size={16} style={{ color: "#d4af37" }} />
+          <div className="d-flex align-items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
+            <div className="d-flex align-items-center justify-content-center rounded-3" style={{ background: "#2E7D32", width: 36, height: 36 }}>
+              <span className="text-white fw-bold fs-5">A</span>
             </div>
-            <span className="fs-4 font-bold tracking-widest text-white font-serif gold-gradient-text">AUREUM</span>
+            <span className="fs-4 fw-bolder text-dark" style={{ letterSpacing: "-1px" }}>AUREUM</span>
           </div>
 
-          {/* Navigation Links */}
           <nav className="d-none d-lg-flex align-items-center gap-4">
-            <a href="#hero" className="home-nav-link text-warning font-bold">Home</a>
-            <a href="#features-pillars" className="home-nav-link text-warning font-bold">Features</a>
-            <a href="#stores" className="home-nav-link text-warning font-bold">Stores</a>
-            <a href="#categories" className="home-nav-link text-warning font-bold">Categories</a>
-            <a href="#products" className="home-nav-link text-warning font-bold">Products</a>
-            <a href="#pricing" className="home-nav-link text-warning font-bold">Pricing</a>
-            <a href="#testimonials" className="home-nav-link text-warning font-bold">Reviews</a>
+            <a href="#hero" className="goslot-nav-link">Home</a>
+            <a href="#features" className="goslot-nav-link">Features</a>
+            <a href="#stores" className="goslot-nav-link">Stores</a>
+            <a href="#products" className="goslot-nav-link">Catalog</a>
+            <a href="#pricing" className="goslot-nav-link">Pricing</a>
           </nav>
 
-          {/* Action Buttons */}
           <div className="d-flex align-items-center gap-3">
-            <button onClick={() => navigate("/customer-dashboard")} className="btn btn-sm btn-outline-warning rounded-circle p-2 position-relative" title="View Customer Dashboard Cart">
-              <ShoppingCart size={16} />
+            <button onClick={() => navigate("/customer-dashboard")} className="btn btn-sm btn-light rounded-circle p-2 position-relative shadow-sm border">
+              <ShoppingCart size={16} className="text-dark" />
               {cartCount > 0 && (
-                <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark font-bold fs-9">
+                <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success">
                   {cartCount}
                 </span>
               )}
             </button>
-            <button onClick={() => navigate("/login")} className="btn btn-sm btn-outline-warning rounded-pill px-3 fw-semibold">
-              Signin
+            <button onClick={() => navigate("/login")} className="goslot-btn goslot-btn-outline py-1.5 px-3 fs-8">
+              Login
             </button>
-            <button onClick={() => navigate("/owner/dashboard")} className="btn-gold-pill btn-sm">
-              <Rocket size={14} /> Launch Your Store
+            <button onClick={() => navigate("/owner/dashboard")} className="goslot-btn goslot-btn-primary py-1.5 px-3 fs-8">
+              <Rocket size={14} /> Start Selling
             </button>
           </div>
         </div>
       </header>
 
-      {/* 3. HERO BANNER */}
-      <section id="hero" className="position-relative py-5 px-3 my-4 text-center" style={{ zIndex: 10 }}>
-        <div className="container-xl max-w-4xl mx-auto">
-          <div className="gold-badge-amber mb-3 px-3 py-1.5 rounded-pill border d-inline-flex align-items-center gap-2" style={{ borderColor: "rgba(212,175,55,0.4)" }}>
-            <Sparkles size={14} /> The Next-Generation Multi-Vendor Commerce System
-          </div>
-
-          <h1 className="display-3 font-serif font-bold text-white mb-4" style={{ lineHeight: 1.15 }}>
-            Commerce, <br />
-            <span className="gold-gradient-text italic">minted in gold.</span>
+      {/* HERO */}
+      <section id="hero" className="goslot-hero">
+        <div className="hero-blob blob-1"></div>
+        <div className="hero-blob blob-2"></div>
+        
+        <div className="container-xl position-relative z-10 text-center max-w-4xl mx-auto">
+          <div className="goslot-eyebrow">The Multi-Vendor SaaS Platform</div>
+          <h1 className="display-4 fw-bolder mb-4">
+            Build, Manage, and Scale Your <br />
+            <span style={{ color: "var(--primary)" }}>Multi-Merchant Marketplace</span>
           </h1>
-
-          <p className="fs-5 text-muted mb-5 max-w-2xl mx-auto" style={{ lineHeight: 1.6 }}>
-            Discover thousands of luxury products from verified independent merchant stores. A complete multi-vendor ecosystem built for scale, prestige, and seamless customer shopping.
+          <p className="fs-5 mx-auto mb-5" style={{ maxWidth: 680 }}>
+            Aureum is the all-in-one platform for vendors to launch their stores and buyers to shop seamlessly. Manage orders, payouts, and catalogs from a central dashboard.
           </p>
-
           <div className="d-flex flex-wrap align-items-center justify-content-center gap-3 mb-5">
-            <button onClick={() => navigate("/customer-dashboard")} className="btn-gold-pill fs-6 py-3 px-5">
+            <button onClick={() => navigate("/customer-dashboard")} className="goslot-btn goslot-btn-primary fs-6 px-5 py-3">
               Explore Marketplace <ArrowRight size={18} />
             </button>
-            <a href="#stores" className="btn-outline-gold-pill fs-6 py-3 px-5">
-              Browse Stores Directory
-            </a>
-          </div>
-
-          <div className="d-flex flex-wrap align-items-center justify-content-center gap-5 fs-7 text-muted border-top pt-4" style={{ borderColor: "rgba(212,175,55,0.15)", maxWidth: 650, margin: "0 auto" }}>
-            <div className="d-flex align-items-center gap-2"><ShieldCheck size={18} style={{ color: GOLD }} /> 100% Verified Merchants</div>
-            <div className="d-flex align-items-center gap-2"><Truck size={18} style={{ color: GOLD }} /> Worldwide Express Shipping</div>
-            <div className="d-flex align-items-center gap-2"><Zap size={18} style={{ color: GOLD }} /> 256-Bit SSL Checkout</div>
-          </div>
-        </div>
-      </section>
-
-      {/* 4. WHY CHOOSE AUREUM - VALUE PILLARS SECTION */}
-      <section id="features-pillars" className="py-5 px-3 position-relative" style={{ zIndex: 10 }}>
-        <div className="container-xl">
-          <div className="text-center max-w-3xl mx-auto mb-5">
-            <div className="gold-badge-amber mb-2"><Crown size={14} /> PLATFORM CAPABILITIES</div>
-            <h2 className="fs-2 font-serif font-bold text-white mb-2">Engineered for Multi-Vendor Supremacy</h2>
-            <p className="fs-8 text-muted mb-0">Empowering store merchants, marketplace administrators, and luxury shoppers with enterprise infrastructure.</p>
-          </div>
-
-          <div className="row g-4">
-            {[
-              {
-                icon: Store,
-                title: "Instant Storefront Creation",
-                desc: "Merchants launch customized storefronts with unique subdomains, category catalogs, and branded checkout in under 60 seconds."
-              },
-              {
-                icon: DollarSign,
-                title: "Automated Commission Payouts",
-                desc: "Integrated multi-merchant revenue splitting, Stripe & PayPal automated commission payouts, and live earnings analytics."
-              },
-              {
-                icon: ShieldCheck,
-                title: "Enterprise SSL & Security",
-                desc: "Bank-grade 256-bit SSL encryption, automated inventory synchronization, and comprehensive audit logs across all stores."
-              },
-              {
-                icon: ShoppingCart,
-                title: "Unified Customer Shopping",
-                desc: "Shoppers can explore multiple merchant stores, manage cross-store orders, track shipments, and claim reward coupons."
-              }
-            ].map((pillar, i) => (
-              <div key={i} className="col-12 col-md-6 col-lg-3">
-                <div className="home-card-gold p-4 h-100 d-flex flex-column justify-between">
-                  <div>
-                    <div className="w-12 h-12 rounded-3 mb-3 d-flex align-items-center justify-content-center" style={{ background: "rgba(212,175,55,0.15)", color: GOLD }}>
-                      <pillar.icon size={24} />
-                    </div>
-                    <h3 className="fs-5 font-bold text-white mb-2">{pillar.title}</h3>
-                    <p className="fs-8 text-muted mb-0" style={{ lineHeight: 1.6 }}>
-                      {pillar.desc}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 5. FEATURED CATEGORIES GRID */}
-      <section id="categories" className="py-5 px-3 position-relative" style={{ zIndex: 10 }}>
-        <div className="container-xl">
-          <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-4 gap-2">
-            <div>
-              <div className="gold-badge-amber mb-1"><Tag size={14} /> EXPLORE MARKETPLACE</div>
-              <h2 className="fs-2 font-serif font-bold text-white mb-0">Featured Product Categories</h2>
-            </div>
-            <button onClick={() => navigate("/customer-dashboard")} className="btn btn-outline-warning btn-sm rounded-pill px-4 fs-8">
-              Explore All Categories ➔
+            <button onClick={() => navigate("/owner/dashboard")} className="goslot-btn goslot-btn-outline fs-6 px-5 py-3">
+              Become a Merchant
             </button>
           </div>
+          
+          <div className="d-flex flex-wrap align-items-center justify-content-center gap-4 gap-md-5 fs-8 text-muted fw-semibold">
+            <div className="d-flex align-items-center gap-2"><ShieldCheck size={18} style={{ color: "var(--primary)" }} /> 100% Verified Vendors</div>
+            <div className="d-flex align-items-center gap-2"><Zap size={18} style={{ color: "var(--primary)" }} /> Instant Payouts</div>
+            <div className="d-flex align-items-center gap-2"><Store size={18} style={{ color: "var(--primary)" }} /> Custom Subdomains</div>
+          </div>
+        </div>
+      </section>
 
-          <div className="row g-3">
+      {/* FEATURES */}
+      <section id="features" className="py-5">
+        <div className="container-xl">
+          <div className="text-center mb-5">
+            <div className="goslot-eyebrow">Core Features</div>
+            <h2 className="fs-2 mb-3">Everything you need to run a platform</h2>
+          </div>
+          <div className="row g-4">
             {[
-              { name: "Apparel & Fashion", count: "5,890 Items", img: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=400" },
-              { name: "Watches & Luxury", count: "1,840 Items", img: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=400" },
-              { name: "Luxury Decor", count: "2,150 Items", img: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400" },
-              { name: "Electronics & Tech", count: "3,420 Items", img: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=400" },
-              { name: "Beauty & Cosmetics", count: "2,980 Items", img: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=400" },
-              { name: "Kicks & Footwear", count: "1,420 Items", img: "https://images.unsplash.com/photo-1552346154-21d32810aba3?w=400" },
-            ].map((cat, idx) => (
-              <div key={idx} className="col-6 col-md-4 col-lg-2">
-                <div
-                  onClick={() => navigate("/customer-dashboard")}
-                  className="home-card-gold text-center p-3 cursor-pointer h-100 d-flex flex-column justify-between"
-                >
-                  <div>
-                    <img src={cat.img} alt={cat.name} className="w-100 rounded-3 mb-2 object-cover" style={{ height: 110 }} />
-                    <div className="font-bold fs-7 text-white mb-0.5">{cat.name}</div>
-                    <div className="fs-9 text-warning font-mono">{cat.count}</div>
+              { icon: Store, title: "Storefronts", desc: "Merchants get custom subdomains, catalogs, and branding out of the box." },
+              { icon: DollarSign, title: "Automated Payouts", desc: "Split payments seamlessly with Stripe Connect. Instant merchant commissions." },
+              { icon: ShieldCheck, title: "Enterprise Security", desc: "Bank-grade 256-bit SSL encryption and full transaction audit logs." },
+              { icon: ShoppingCart, title: "Unified Cart", desc: "Shoppers can buy from multiple stores in a single, seamless checkout flow." }
+            ].map((f, i) => (
+              <div key={i} className="col-12 col-md-6 col-lg-3">
+                <div className="goslot-card h-100 d-flex flex-column">
+                  <div className="d-inline-flex align-items-center justify-content-center rounded-3 mb-3" style={{ width: 48, height: 48, background: "rgba(46,125,50,0.1)", color: "var(--primary)" }}>
+                    <f.icon size={24} />
                   </div>
+                  <h3 className="fs-5 mb-2">{f.title}</h3>
+                  <p className="fs-7 mb-0">{f.desc}</p>
                 </div>
               </div>
             ))}
@@ -258,54 +265,36 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 6. FEATURED MERCHANT STORES DIRECTORY */}
-      <section id="stores" className="py-5 px-3 position-relative" style={{ zIndex: 10 }}>
+      {/* STORES */}
+      <section id="stores" className="py-5" style={{ background: "rgba(46,125,50,0.02)" }}>
         <div className="container-xl">
-          <div className="d-flex align-items-center justify-content-between mb-4">
+          <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-4 gap-3">
             <div>
-              <div className="gold-badge-amber mb-1"><Store size={13} /> VERIFIED SHOPS</div>
-              <h2 className="fs-3 font-serif font-bold text-white mb-0">Featured Merchant Stores</h2>
+              <div className="goslot-eyebrow">Featured Sellers</div>
+              <h2 className="fs-3 mb-0">Discover Top Merchant Stores</h2>
             </div>
-            <button onClick={() => navigate("/customer-dashboard")} className="btn btn-link text-warning fs-8 p-0 text-decoration-none">View All Stores →</button>
+            <button onClick={() => navigate("/customer-dashboard")} className="goslot-btn goslot-btn-outline py-2 px-4 fs-8">View All Stores →</button>
           </div>
-
-          <div className="row g-3">
+          <div className="row g-4">
             {[
-              { name: "Coastal Threads Store", owner: "Sarah Jenkins", category: "Fashion & Apparel", rating: "4.9", prods: "24 Products", subdomain: "coastal-threads", img: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=300" },
-              { name: "Margas Store", owner: "Marcus Vance", category: "Bespoke Outerwear", rating: "4.9", prods: "36 Products", subdomain: "margas-store", img: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=300" },
-              { name: "Sheikh Home Decor", owner: "Fatima Sheikh", category: "Luxury Furniture", rating: "4.7", prods: "18 Products", subdomain: "sheikh-home", img: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=300" },
-              { name: "Aureum Boutique", owner: "Elena Rostova", category: "Watches & Jewelry", rating: "4.9", prods: "15 Products", subdomain: "aureum-boutique", img: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=300" },
+              { name: "Coastal Threads Store", owner: "Sarah Jenkins", category: "Fashion & Apparel", img: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=300" },
+              { name: "Aureum Boutique", owner: "Elena Rostova", category: "Watches & Jewelry", img: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=300" },
+              { name: "Margas Store", owner: "Marcus Vance", category: "Bespoke Outerwear", img: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=300" },
+              { name: "Sheikh Home Decor", owner: "Fatima Sheikh", category: "Luxury Furniture", img: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=300" }
             ].map((store, i) => (
-              <div key={i} className="col-12 col-sm-6 col-lg-3">
-                <div className="home-card-gold p-3 d-flex flex-column justify-between h-100">
-                  <div>
-                    <div className="d-flex align-items-center gap-3 mb-2">
-                      <img src={store.img} alt={store.name} className="rounded-3 object-cover" style={{ width: 50, height: 50 }} />
-                      <div>
-                        <div className="fw-bold text-white fs-7 d-flex align-items-center gap-1">
-                          {store.name} <CheckCircle size={12} className="text-warning" />
-                        </div>
-                        <div className="fs-8 text-warning font-mono">https://{store.subdomain}.storemanager.app</div>
-                      </div>
-                    </div>
-
-                    <div className="d-flex align-items-center justify-content-between fs-8 text-muted mb-2">
-                      <span>Owner: <strong className="text-white">{store.owner}</strong></span>
-                      <span className="gold-badge-amber fs-9">{store.category}</span>
+              <div key={i} className="col-12 col-md-6 col-lg-3">
+                <div className="goslot-card h-100 p-3">
+                  <div className="d-flex align-items-center gap-3 mb-3">
+                    <img src={store.img} alt={store.name} className="rounded-circle object-cover shadow-sm border" style={{ width: 56, height: 56 }} />
+                    <div>
+                      <div className="fw-bolder text-dark fs-7 lh-sm">{store.name}</div>
+                      <div className="fs-8 text-muted">{store.category}</div>
                     </div>
                   </div>
-
-                  <div className="d-flex align-items-center justify-content-between pt-2 border-top" style={{ borderColor: "rgba(212,175,55,0.15)" }}>
-                    <div className="fs-9 text-warning font-bold">
-                      <Star size={10} className="fill-warning me-1" /> {store.rating} ({store.prods})
-                    </div>
-                    <button
-                      onClick={() => navigate("/customer-dashboard")}
-                      className="btn btn-sm btn-outline-warning fs-9 py-1 px-2.5 d-flex align-items-center gap-1"
-                    >
-                      Visit Store ➔
-                    </button>
+                  <div className="fs-8 text-muted mb-3 d-flex align-items-center gap-1">
+                    <CheckCircle size={14} className="text-success" /> Verified Owner: {store.owner}
                   </div>
+                  <button onClick={() => navigate("/customer-dashboard")} className="btn btn-sm btn-light w-100 fs-8 fw-semibold border">Visit Store</button>
                 </div>
               </div>
             ))}
@@ -313,65 +302,49 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 7. CURATED CATALOG - TRENDING STORE ITEMS (BELOW SECTION) */}
-      <section id="products" className="py-5 px-3 position-relative border-top" style={{ borderColor: "rgba(212,175,55,0.15)", zIndex: 10 }}>
+      {/* PRODUCTS */}
+      <section id="products" className="py-5">
         <div className="container-xl">
-          <div className="d-flex align-items-center justify-content-between mb-4">
+          <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-4 gap-3">
             <div>
-              <div className="gold-badge-amber mb-1"><Package size={13} /> CURATED CATALOG</div>
-              <h2 className="fs-3 font-serif font-bold text-white mb-0">Products Created by Store Owners</h2>
+              <div className="goslot-eyebrow">Catalog</div>
+              <h2 className="fs-3 mb-0">Trending Products</h2>
             </div>
-            <button onClick={() => navigate("/products")} className="btn btn-link text-warning fs-8 p-0 text-decoration-none">View All Products →</button>
           </div>
-
+          
           {(() => {
             const saved = localStorage.getItem("aureum_owner_products");
             let ownerProducts = [];
             if (saved) {
-              try {
-                const parsed = JSON.parse(saved);
-                if (Array.isArray(parsed)) ownerProducts = parsed;
-              } catch (e) {}
+              try { ownerProducts = JSON.parse(saved); } catch (e) {}
             }
+            if (!Array.isArray(ownerProducts)) ownerProducts = [];
 
             if (ownerProducts.length === 0) {
               return (
-                <div className="home-card-gold p-5 rounded-3 text-center w-100 my-2">
-                  <div className="w-16 h-16 rounded-circle bg-warning bg-opacity-15 text-warning d-inline-flex align-items-center justify-content-center mb-3">
-                    <Package size={34} />
-                  </div>
-                  <h3 className="fs-4 font-serif font-bold text-white mb-2">No Store Products Listed Yet</h3>
-                  <p className="fs-7 text-muted max-w-md mx-auto mb-4" style={{ maxWidth: 480, lineHeight: 1.6 }}>
-                    Store owners have not published any products to the storefront catalog yet. Register as a store manager to create your store and list your products!
-                  </p>
-                  <button onClick={() => navigate("/owner/dashboard")} className="btn btn-gold-primary py-2 px-4 font-bold fs-7 d-inline-flex align-items-center gap-2">
-                    <Rocket size={16} /> Launch Your Store & List Products
+                <div className="goslot-card text-center py-5 my-3">
+                  <Package size={40} className="text-muted mb-3 mx-auto" />
+                  <h3 className="fs-4 mb-2">No Products Listed Yet</h3>
+                  <p className="fs-7 text-muted max-w-md mx-auto mb-4">Start your merchant journey by creating a store and listing your first product.</p>
+                  <button onClick={() => navigate("/owner/dashboard")} className="goslot-btn goslot-btn-primary">
+                    Start Selling Today
                   </button>
                 </div>
               );
             }
 
             return (
-              <div className="row g-3">
+              <div className="row g-4">
                 {ownerProducts.map((prod) => (
-                  <div key={prod.id} className="col-12 col-sm-6 col-md-3">
-                    <div className="home-card-gold p-3 d-flex flex-column justify-between h-100 cursor-pointer" onClick={() => setQuickViewProduct(prod)}>
-                      <div>
-                        <div className="position-relative mb-2">
-                          <img src={prod.image || "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=400"} alt={prod.name} className="w-100 rounded-3 object-cover" style={{ height: 160 }} />
-                          <span className="position-absolute bottom-0 start-0 m-2 gold-badge-amber fs-9 font-mono">
-                            {prod.category || "Catalog"} • {prod.status || "In Stock"}
-                          </span>
-                        </div>
-                        <div className="fw-bold fs-7 text-white mb-1 line-clamp-1" style={{ color: "#f3d675" }}>{prod.name}</div>
-                        <div className="d-flex align-items-center justify-content-between mb-2">
-                          <span className="fw-bold fs-6" style={{ color: "#f3d675" }}>{prod.price}</span>
-                          <span className="fs-8 text-muted d-flex align-items-center me-1"><Star size={11} className="text-warning fill-warning me-1" /> 4.9</span>
-                        </div>
+                  <div key={prod.id} className="col-12 col-sm-6 col-lg-3">
+                    <div className="goslot-card p-3 h-100 cursor-pointer d-flex flex-column" onClick={() => setQuickViewProduct(prod)}>
+                      <img src={prod.image || "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=400"} alt={prod.name} className="w-100 rounded-3 mb-3 object-cover" style={{ height: 180 }} />
+                      <div className="fw-bolder fs-7 text-dark mb-1">{prod.name}</div>
+                      <div className="fs-8 text-muted mb-2">{prod.category || "General"}</div>
+                      <div className="mt-auto d-flex align-items-center justify-content-between">
+                        <span className="fw-bolder fs-5 text-dark">{prod.price}</span>
+                        <button onClick={(e) => handleAddToCart(e, prod)} className="btn btn-sm btn-success rounded-pill px-3 fw-bold fs-8">+ Add</button>
                       </div>
-                      <button onClick={(e) => handleAddToCart(e, prod)} className="btn btn-gold-primary btn-sm w-100 py-1.5 font-bold">
-                        + Add to Cart
-                      </button>
                     </div>
                   </div>
                 ))}
@@ -381,216 +354,140 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 9. PRICING SECTION */}
-      <section id="pricing" className="py-5 px-3 position-relative" style={{ zIndex: 10 }}>
+      {/* PRICING */}
+      <section id="pricing" className="py-5" style={{ background: "rgba(46,125,50,0.02)" }}>
         <div className="container-xl">
-          <div className="text-center max-w-3xl mx-auto mb-5">
-            <div className="gold-badge-amber mb-2"><Sparkles size={14} /> TRANSPARENT SUBSCRIPTIONS</div>
-            <h2 className="fs-2 font-serif font-bold text-white mb-2">Minted for Every Scale of Enterprise</h2>
-            <p className="fs-8 text-muted mb-0">Choose a seller plan tailored to your merchant volume with zero hidden fees.</p>
+          <div className="text-center mb-5">
+            <div className="goslot-eyebrow">Pricing Plans</div>
+            <h2 className="fs-2 mb-2">Simple, transparent pricing</h2>
+            <p>Start for free, upgrade when you need more power.</p>
           </div>
-
-          <div className="row g-4 justify-content-center">
+          <div className="row g-4 justify-content-center max-w-5xl mx-auto">
             <div className="col-12 col-md-4">
-              <div className="home-card-gold p-4 h-100 d-flex flex-column justify-between">
-                <div>
-                  <h3 className="fs-5 text-white font-serif mb-1">Starter Merchant</h3>
-                  <div className="fs-8 text-muted mb-3">Independent boutique store owners</div>
-                  <div className="fs-2 font-bold text-white mb-4">$29 <span className="fs-8 font-normal text-muted">/ mo</span></div>
-                  <ul className="list-unstyled fs-8 text-muted space-y-2 mb-4">
-                    <li className="d-flex align-items-center gap-2"><Check size={14} className="text-warning" /> Up to 5 Merchant Stores</li>
-                    <li className="d-flex align-items-center gap-2"><Check size={14} className="text-warning" /> 500 Product Catalog Limit</li>
-                    <li className="d-flex align-items-center gap-2"><Check size={14} className="text-warning" /> Standard Support & Analytics</li>
-                  </ul>
-                </div>
-                <button onClick={() => setShowRoleModal(true)} className="btn btn-outline-warning rounded-pill w-100 font-bold py-2">Get Started</button>
+              <div className="goslot-card h-100">
+                <h3 className="fs-5 mb-1">Starter</h3>
+                <p className="fs-8 text-muted mb-3">For new merchants</p>
+                <div className="fs-2 fw-bolder mb-4">$29<span className="fs-7 text-muted fw-normal">/mo</span></div>
+                <ul className="list-unstyled fs-7 text-muted space-y-3 mb-4">
+                  <li><Check size={16} className="text-success me-2" /> 5 Storefronts</li>
+                  <li><Check size={16} className="text-success me-2" /> 500 Products</li>
+                  <li><Check size={16} className="text-success me-2" /> Standard Support</li>
+                </ul>
+                <button onClick={() => setShowRoleModal(true)} className="goslot-btn goslot-btn-outline w-100">Get Started</button>
               </div>
             </div>
-
             <div className="col-12 col-md-4">
-              <div className="home-card-gold p-4 h-100 d-flex flex-column justify-between border-warning" style={{ borderWidth: 2, background: "#0e0c08" }}>
-                <div>
-                  <span className="badge bg-warning text-dark font-bold mb-2">MOST POPULAR</span>
-                  <h3 className="fs-5 text-warning font-serif mb-1">Business Scale</h3>
-                  <div className="fs-8 text-muted mb-3">Growing multi-vendor networks</div>
-                  <div className="fs-2 font-bold text-white mb-4">$79 <span className="fs-8 font-normal text-muted">/ mo</span></div>
-                  <ul className="list-unstyled fs-8 text-muted space-y-2 mb-4">
-                    <li className="d-flex align-items-center gap-2"><Check size={14} className="text-warning" /> Up to 25 Merchant Stores</li>
-                    <li className="d-flex align-items-center gap-2"><Check size={14} className="text-warning" /> Unlimited Product Catalogs</li>
-                    <li className="d-flex align-items-center gap-2"><Check size={14} className="text-warning" /> Real-time Payouts & Commission Analytics</li>
-                  </ul>
-                </div>
-                <button onClick={() => setShowRoleModal(true)} className="btn-gold-pill justify-content-center w-100 py-2">Start 14-Day Free Trial</button>
+              <div className="goslot-card h-100 border-success position-relative" style={{ borderWidth: 2, transform: "scale(1.02)" }}>
+                <span className="position-absolute top-0 start-50 translate-middle badge bg-success rounded-pill px-3 py-1">POPULAR</span>
+                <h3 className="fs-5 mb-1 text-success">Professional</h3>
+                <p className="fs-8 text-muted mb-3">For growing networks</p>
+                <div className="fs-2 fw-bolder mb-4">$79<span className="fs-7 text-muted fw-normal">/mo</span></div>
+                <ul className="list-unstyled fs-7 text-muted space-y-3 mb-4">
+                  <li><Check size={16} className="text-success me-2" /> 25 Storefronts</li>
+                  <li><Check size={16} className="text-success me-2" /> Unlimited Products</li>
+                  <li><Check size={16} className="text-success me-2" /> Automated Payouts</li>
+                </ul>
+                <button onClick={() => setShowRoleModal(true)} className="goslot-btn goslot-btn-primary w-100">Start Free Trial</button>
               </div>
             </div>
-
             <div className="col-12 col-md-4">
-              <div className="home-card-gold p-4 h-100 d-flex flex-column justify-between">
-                <div>
-                  <h3 className="fs-5 text-white font-serif mb-1">Enterprise Gold</h3>
-                  <div className="fs-8 text-muted mb-3">Global multi-merchant enterprise</div>
-                  <div className="fs-2 font-bold text-white mb-4">$199 <span className="fs-8 font-normal text-muted">/ mo</span></div>
-                  <ul className="list-unstyled fs-8 text-muted space-y-2 mb-4">
-                    <li className="d-flex align-items-center gap-2"><Check size={14} className="text-warning" /> Unlimited Stores & Merchants</li>
-                    <li className="d-flex align-items-center gap-2"><Check size={14} className="text-warning" /> Custom SSL & Domain Subdomains</li>
-                    <li className="d-flex align-items-center gap-2"><Check size={14} className="text-warning" /> Dedicated Account Manager</li>
-                  </ul>
-                </div>
-                <button onClick={() => setShowRoleModal(true)} className="btn btn-outline-warning rounded-pill w-100 font-bold py-2">Contact Sales</button>
+              <div className="goslot-card h-100">
+                <h3 className="fs-5 mb-1">Enterprise</h3>
+                <p className="fs-8 text-muted mb-3">For massive scale</p>
+                <div className="fs-2 fw-bolder mb-4">$199<span className="fs-7 text-muted fw-normal">/mo</span></div>
+                <ul className="list-unstyled fs-7 text-muted space-y-3 mb-4">
+                  <li><Check size={16} className="text-success me-2" /> Unlimited Everything</li>
+                  <li><Check size={16} className="text-success me-2" /> Custom Domains</li>
+                  <li><Check size={16} className="text-success me-2" /> Dedicated Manager</li>
+                </ul>
+                <button onClick={() => setShowRoleModal(true)} className="goslot-btn goslot-btn-outline w-100">Contact Sales</button>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 10. REVIEWS & TESTIMONIALS */}
-      <section id="testimonials" className="py-5 px-3 position-relative" style={{ zIndex: 10 }}>
-        <div className="container-xl">
-          <div className="text-center max-w-3xl mx-auto mb-4">
-            <div className="gold-badge-amber mb-2"><Star size={14} /> REVIEWS & PRAISE</div>
-            <h2 className="fs-2 font-serif font-bold text-white">Loved by Buyers & Merchant Owners</h2>
-          </div>
-
-          <div className="row g-3">
-            {[
-              { quote: "AUREUM transformed our boutique apparel brand. Managing 18 store locations under one dashboard with gold precision is unbelievable.", name: "Meera Nair", role: "Owner, Coastal Threads Store" },
-              { quote: "Shopping on AUREUM feels like a high-end luxury boutique. Smooth checkout, verified sellers, and fast shipping every time.", name: "Sara Ahmed", role: "VIP Customer" },
-              { quote: "The platform analytics and commission tracking make managing our multi-merchant ecosystem effortless. Outstanding software.", name: "Marcus Vance", role: "Super Admin Merchant" },
-            ].map((rev, i) => (
-              <div key={i} className="col-12 col-md-4">
-                <div className="home-card-gold p-4 h-100 d-flex flex-column justify-between">
-                  <p className="fs-8 text-muted italic mb-3" style={{ lineHeight: 1.6 }}>"{rev.quote}"</p>
-                  <div>
-                    <div className="text-warning mb-2">★★★★★</div>
-                    <div className="border-top pt-2" style={{ borderColor: "rgba(212,175,55,0.15)" }}>
-                      <div className="fw-bold text-white fs-7">{rev.name}</div>
-                      <div className="fs-9 text-warning">{rev.role}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 11. NEWSLETTER SECTION */}
-      <section className="py-5 px-3 position-relative" style={{ zIndex: 10 }}>
-        <div className="container max-w-2xl text-center">
-          <div className="home-card-gold p-5">
-            <Mail size={28} className="text-warning mb-2" />
-            <h3 className="fs-4 font-bold text-white mb-2">Subscribe for Exclusive Merchant Deals</h3>
-            <p className="fs-8 text-muted mb-4">Get early access to flash sales, luxury merchant discounts, and marketplace news.</p>
-
-            {newsletterSuccess ? (
-              <div className="alert alert-success bg-dark text-success border-success fs-7">
-                ✨ Thank you for subscribing to AUREUM updates!
-              </div>
-            ) : (
-              <form onSubmit={handleNewsletterSubmit} className="d-flex flex-column flex-sm-row gap-2 max-w-md mx-auto">
-                <input
-                  required
-                  type="email"
-                  placeholder="Enter your email address..."
-                  value={newsletterEmail}
-                  onChange={(e) => setNewsletterEmail(e.target.value)}
-                  className="form-control bg-dark text-white border-secondary fs-8 rounded-pill px-3"
-                />
-                <button type="submit" className="btn-gold-pill py-2 px-4 fs-8">
-                  Subscribe <Send size={13} />
-                </button>
-              </form>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* 12. FOOTER */}
-      <footer id="contact" className="py-4 border-top" style={{ backgroundColor: "#040404", borderColor: "rgba(212,175,55,0.2)", zIndex: 10 }}>
+      {/* FOOTER */}
+      <footer className="py-4 mt-5 bg-white border-top">
         <div className="container-xl d-flex flex-column flex-sm-row align-items-center justify-content-between gap-3 fs-8 text-muted">
           <div>
-            <span className="font-bold text-white font-serif me-2">AUREUM</span>
-            <span>© 2026 AUREUM Multi-Vendor Platform. Built for excellence.</span>
+            <span className="fw-bolder text-dark me-2">AUREUM SaaS</span>
+            <span>© 2026. All rights reserved.</span>
           </div>
-          <div className="d-flex gap-4 fs-9">
-            <a href="#privacy" className="text-muted text-decoration-none">Privacy Policy</a>
-            <a href="#terms" className="text-muted text-decoration-none">Terms of Service</a>
-            <a href="#security" className="text-muted text-decoration-none">Security Audit</a>
+          <div className="d-flex gap-4">
+            <a href="#privacy" className="text-muted text-decoration-none hover-text-dark">Privacy</a>
+            <a href="#terms" className="text-muted text-decoration-none hover-text-dark">Terms</a>
           </div>
         </div>
       </footer>
 
       {/* ROLE SELECTOR MODAL */}
       {showRoleModal && (
-        <div className="position-fixed top-0 bottom-0 start-0 end-0 bg-dark bg-opacity-75 d-flex align-items-center justify-content-center p-3" style={{ zIndex: 1050 }}>
-          <div className="gold-panel w-100" style={{ maxWidth: 420 }}>
-            <div className="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2" style={{ borderColor: "rgba(212,175,55,0.2)" }}>
-              <h3 className="fs-6 font-bold text-warning mb-0">Select Workspace Portal</h3>
-              <button onClick={() => setShowRoleModal(false)} className="btn btn-sm text-muted p-0 border-0 bg-transparent fs-5">✕</button>
+        <div className="position-fixed top-0 bottom-0 start-0 end-0 bg-dark bg-opacity-50 d-flex align-items-center justify-content-center p-3" style={{ zIndex: 1050, backdropFilter: "blur(4px)" }}>
+          <div className="goslot-card w-100" style={{ maxWidth: 460 }}>
+            <div className="d-flex align-items-center justify-content-between mb-4 border-bottom pb-3">
+              <h3 className="fs-5 fw-bold mb-0">Select Workspace</h3>
+              <button onClick={() => setShowRoleModal(false)} className="btn btn-sm btn-light rounded-circle">✕</button>
             </div>
-
-            <div className="d-flex flex-column gap-2.5 fs-7">
-              <div onClick={() => { setShowRoleModal(false); navigate("/owner/dashboard"); }} className="p-3 rounded-3 bg-dark border border-secondary cursor-pointer d-flex align-items-center gap-3 hover:border-warning transition-all">
-                <div className="w-10 h-10 rounded-circle bg-warning text-dark d-flex align-items-center justify-content-center font-bold">
-                  <Store size={20} />
+            <div className="d-flex flex-column gap-3">
+              <div onClick={() => { setShowRoleModal(false); navigate("/owner/dashboard"); }} className="p-3 rounded-3 border cursor-pointer d-flex align-items-center gap-3 hover-bg-light transition-all" style={{ background: "white" }}>
+                <div className="rounded-circle bg-success bg-opacity-10 text-success d-flex align-items-center justify-content-center p-2">
+                  <Store size={22} />
                 </div>
                 <div>
-                  <div className="fw-bold text-white">Store Owner Dashboard</div>
-                  <div className="fs-8 text-muted">Manage products, categories, orders & stores</div>
+                  <div className="fw-bolder text-dark">Store Owner Dashboard</div>
+                  <div className="fs-8 text-muted">Manage products & catalogs</div>
                 </div>
               </div>
-
-              <div onClick={() => { setShowRoleModal(false); navigate("/admin/dashboard"); }} className="p-3 rounded-3 bg-dark border border-secondary cursor-pointer d-flex align-items-center gap-3 hover:border-warning transition-all">
-                <div className="w-10 h-10 rounded-circle bg-warning text-dark d-flex align-items-center justify-content-center font-bold">
-                  <Crown size={20} />
+              <div onClick={() => { setShowRoleModal(false); navigate("/admin/dashboard"); }} className="p-3 rounded-3 border cursor-pointer d-flex align-items-center gap-3 hover-bg-light transition-all" style={{ background: "white" }}>
+                <div className="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center p-2">
+                  <Crown size={22} />
                 </div>
                 <div>
-                  <div className="fw-bold text-white">Super Admin Control</div>
-                  <div className="fs-8 text-muted">Platform revenue, store approvals & orders</div>
+                  <div className="fw-bolder text-dark">Super Admin Control</div>
+                  <div className="fs-8 text-muted">Platform revenue & operations</div>
                 </div>
               </div>
-
-              <div onClick={() => { setShowRoleModal(false); navigate("/customer-dashboard"); }} className="p-3 rounded-3 bg-dark border border-secondary cursor-pointer d-flex align-items-center gap-3 hover:border-warning transition-all">
-                <div className="w-10 h-10 rounded-circle bg-warning text-dark d-flex align-items-center justify-content-center font-bold">
-                  <ShoppingCart size={20} />
+              <div onClick={() => { setShowRoleModal(false); navigate("/customer-dashboard"); }} className="p-3 rounded-3 border cursor-pointer d-flex align-items-center gap-3 hover-bg-light transition-all" style={{ background: "white" }}>
+                <div className="rounded-circle bg-warning bg-opacity-25 text-dark d-flex align-items-center justify-content-center p-2">
+                  <ShoppingCart size={22} />
                 </div>
                 <div>
-                  <div className="fw-bold text-white">Customer Shopping Portal</div>
-                  <div className="fs-8 text-muted">Browse items, track orders & view stores</div>
+                  <div className="fw-bolder text-dark">Customer Shopping Portal</div>
+                  <div className="fs-8 text-muted">Browse items & track orders</div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       )}
-
+      
       {/* QUICK VIEW MODAL */}
       {quickViewProduct && (
-        <div className="position-fixed top-0 bottom-0 start-0 end-0 bg-dark bg-opacity-75 d-flex align-items-center justify-content-center p-3" style={{ zIndex: 1050 }}>
-          <div className="gold-panel w-100" style={{ maxWidth: 480 }}>
-            <div className="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2" style={{ borderColor: "rgba(212,175,55,0.2)" }}>
-              <h3 className="fs-6 font-bold text-warning mb-0">{quickViewProduct.name}</h3>
-              <button onClick={() => setQuickViewProduct(null)} className="btn btn-sm text-muted p-0 border-0 bg-transparent fs-5">✕</button>
+        <div className="position-fixed top-0 bottom-0 start-0 end-0 bg-dark bg-opacity-50 d-flex align-items-center justify-content-center p-3" style={{ zIndex: 1050, backdropFilter: "blur(4px)" }}>
+          <div className="goslot-card w-100" style={{ maxWidth: 500 }}>
+            <div className="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+              <h3 className="fs-6 font-bold text-dark mb-0">{quickViewProduct.name}</h3>
+              <button onClick={() => setQuickViewProduct(null)} className="btn btn-sm btn-light rounded-circle">✕</button>
             </div>
             <div className="row g-3">
               <div className="col-5">
-                <img src={quickViewProduct.img} alt={quickViewProduct.name} className="w-100 rounded-3 object-cover" style={{ height: 140 }} />
+                <img src={quickViewProduct.img || quickViewProduct.image || "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=400"} alt={quickViewProduct.name} className="w-100 rounded-3 object-cover shadow-sm" style={{ height: 140 }} />
               </div>
               <div className="col-7 d-flex flex-column justify-between">
                 <div>
-                  <div className="fs-9 text-warning font-semibold">{quickViewProduct.store_name || "Aureum Merchant Item"}</div>
-                  <div className="fs-5 font-bold text-white mb-2">{quickViewProduct.price}</div>
-                  <p className="fs-8 text-muted mb-0">Crafted with authentic premium materials and gold-standard quality.</p>
+                  <div className="fs-9 text-success fw-bolder mb-1">{quickViewProduct.store_name || "Aureum Merchant"}</div>
+                  <div className="fs-5 fw-bolder text-dark mb-2">{quickViewProduct.price}</div>
+                  <p className="fs-8 text-muted mb-0">High-quality product available directly from the store owner.</p>
                 </div>
-                <button onClick={(e) => { handleAddToCart(e, quickViewProduct); setQuickViewProduct(null); }} className="btn btn-gold-primary btn-sm w-100 mt-3 py-2 font-bold">
-                  + Add to Cart Now
+                <button onClick={(e) => { handleAddToCart(e, quickViewProduct); setQuickViewProduct(null); }} className="goslot-btn goslot-btn-primary py-2 w-100 mt-2 fs-7">
+                  + Add to Cart
                 </button>
               </div>
             </div>
           </div>
         </div>
       )}
-
     </div>
   );
 }

@@ -2,8 +2,13 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
+import { StorefrontCartProvider } from '../../context/StorefrontCartContext';
+import { StorefrontAuthProvider } from '../../context/StorefrontAuthContext';
 import StorefrontLayout from '../../layouts/StorefrontLayout';
 import StorefrontHome from './StorefrontHome';
+import ProductDetail from './ProductDetail';
+import Cart from './Cart';
+import Checkout from './Checkout';
 import '../../styles/storefront.css';
 
 export default function StorefrontApp({ subdomain }) {
@@ -212,19 +217,26 @@ export default function StorefrontApp({ subdomain }) {
 
   return (
     <div className="storefront-app-root">
-      <Routes>
-        <Route
-          path="/"
-          element={<StorefrontLayout storeData={storeData} categories={storeCategories} />}
-        >
-          <Route
-            index
-            element={<StorefrontHome storeData={storeData} products={storeProducts} categories={storeCategories} />}
-          />
-          {/* Additional routes such as /product/:id can be added here */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Route>
-      </Routes>
+      <StorefrontAuthProvider>
+        <StorefrontCartProvider storeId={storeData.id}>
+          <Routes>
+            <Route
+              path="/"
+              element={<StorefrontLayout storeData={storeData} categories={storeCategories} products={storeProducts} />}
+            >
+              <Route
+              index
+              element={<StorefrontHome storeData={storeData} products={storeProducts} categories={storeCategories} />}
+            />
+            <Route path="product/:id" element={<ProductDetail storeData={storeData} products={storeProducts} />} />
+            <Route path="cart" element={<Cart />} />
+            <Route path="checkout" element={<Checkout />} />
+            {/* Additional routes such as /product/:id can be added here */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+            </Route>
+          </Routes>
+        </StorefrontCartProvider>
+      </StorefrontAuthProvider>
     </div>
   );
 }

@@ -1,9 +1,58 @@
 import React from 'react';
-import { Outlet } from 'react-router-dom';
-import { Search, ShoppingCart, ChevronDown } from 'lucide-react';
+import { Outlet, Link } from 'react-router-dom';
+import { Search, ShoppingCart, ChevronDown, User, LogOut } from 'lucide-react';
+import { useStorefrontCart } from '../context/StorefrontCartContext';
+import { useStorefrontAuth } from '../context/StorefrontAuthContext';
+import { useAuth } from '../context/AuthContext';
+import StorefrontLoginModal from '../components/StorefrontLoginModal';
 
-export default function StorefrontLayout({ storeData, categories = [] }) {
+export default function StorefrontLayout({ storeData, categories = [], products = [] }) {
+  const { cartCount } = useStorefrontCart();
+  const { user, logout } = useAuth();
+  const { openLoginModal } = useStorefrontAuth();
+  
   const isApparelFocused = storeData?.name?.toLowerCase().includes('ajil') || storeData?.name?.toLowerCase().includes('apparel');
+
+  // Compute the combined list of categories (same logic as StorefrontHome)
+  const productCategories = [];
+  products.forEach(p => {
+    const pCat = p.category && typeof p.category === 'object' ? (p.category.name || 'Uncategorized') : (p.category || 'Uncategorized');
+    if (!productCategories.some(existing => String(existing).toLowerCase() === String(pCat).toLowerCase())) {
+      productCategories.push(pCat);
+    }
+  });
+  
+  const categoriesToRender = [];
+  if (categories && categories.length > 0) {
+    categories.forEach(cat => {
+      categoriesToRender.push({
+        id: cat.id,
+        name: cat.name,
+        slug: cat.slug || String(cat.name || '').toLowerCase().replace(/[^a-z0-9]/g, ''),
+        isCustom: true
+      });
+    });
+  }
+  
+  productCategories.forEach(catName => {
+    if (!categoriesToRender.some(c => String(c.name || '').toLowerCase() === String(catName).toLowerCase() || String(c.id) === String(catName))) {
+      categoriesToRender.push({
+        id: catName,
+        name: catName,
+        slug: String(catName).toLowerCase().replace(/[^a-z0-9]/g, ''),
+        isCustom: false
+      });
+    }
+  });
+
+  // Filter out empty categories
+  const activeCategories = categoriesToRender.filter(cat => {
+    const catProducts = products.filter(p => {
+      const pCat = String((p.category && typeof p.category === 'object' ? p.category.name : p.category) || 'Uncategorized').toLowerCase();
+      return pCat === String(cat.id).toLowerCase() || pCat === String(cat.name || '').toLowerCase() || pCat === String(cat.slug || '').toLowerCase();
+    });
+    return catProducts.length > 0;
+  });
 
   const scrollToSection = (e, id) => {
     e.preventDefault();
@@ -34,7 +83,20 @@ export default function StorefrontLayout({ storeData, categories = [] }) {
           </div>
 
           <div className="storefront-nav-actions">
-            <button className="storefront-login-btn">Login</button>
+            {user && user.id ? (
+              <div className="d-flex align-items-center gap-3">
+                <div className="storefront-nav-item d-none d-md-flex text-white gap-2 fw-semibold">
+                  <User size={16} /> Hi, {user.name.split(' ')[0]}
+                </div>
+                <button className="storefront-login-btn bg-transparent text-white border border-light" onClick={logout}>
+                  <LogOut size={14} className="me-1" /> Logout
+                </button>
+              </div>
+            ) : (
+              <button className="storefront-login-btn" onClick={openLoginModal}>
+                Login
+              </button>
+            )}
 
             <div className="storefront-nav-item">
               Become a Seller
@@ -44,20 +106,29 @@ export default function StorefrontLayout({ storeData, categories = [] }) {
               More <ChevronDown size={14} />
             </div>
 
-            <div className="storefront-nav-item cart-item">
-              <ShoppingCart size={18} />
+            <Link to="/cart" className="storefront-nav-item cart-item text-decoration-none">
+              <div className="position-relative">
+                <ShoppingCart size={18} />
+                {cartCount > 0 && (
+                  <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '0.65rem', transform: 'translate(-30%, -30%)!important' }}>
+                    {cartCount}
+                  </span>
+                )}
+              </div>
               <span>Cart</span>
-            </div>
+            </Link>
           </div>
         </div>
       </header>
 
+      <StorefrontLoginModal />
+
       {/* Categories Sub-header */}
       <div className="storefront-categories-nav">
         <div className="storefront-categories-content">
-          {categories && categories.length > 0 ? (
-            categories.map(cat => {
-              const sectionId = cat.slug || cat.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+          {activeCategories && activeCategories.length > 0 ? (
+            activeCategories.map(cat => {
+              const sectionId = cat.slug;
               return (
                 <a
                   key={cat.id || cat.name}

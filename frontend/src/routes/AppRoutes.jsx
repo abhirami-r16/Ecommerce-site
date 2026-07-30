@@ -42,7 +42,9 @@ function AppRoutes() {
   if (subdomain) {
     return (
       <BrowserRouter>
-        <StorefrontApp subdomain={subdomain} />
+        <AuthProvider>
+          <StorefrontApp subdomain={subdomain} />
+        </AuthProvider>
       </BrowserRouter>
     );
   }

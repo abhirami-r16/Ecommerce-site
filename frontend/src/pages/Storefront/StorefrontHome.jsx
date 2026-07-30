@@ -1,14 +1,19 @@
 import React, { useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { ShoppingCart, Heart } from 'lucide-react';
+import { useStorefrontCart } from '../../context/StorefrontCartContext';
+import { useStorefrontAuth } from '../../context/StorefrontAuthContext';
 
 export default function StorefrontHome({ storeData, products, categories = [] }) {
+  const { requireAuth } = useStorefrontAuth();
   // Determine if this is the apparel-focused store (Ajil Store)
   const isApparelFocused = storeData?.name?.toLowerCase().includes('ajil') || storeData?.name?.toLowerCase().includes('apparel');
 
   // Get unique category names from products (default to 'Uncategorized' if missing)
   const productCategories = [];
   products.forEach(p => {
-    const pCat = p.category || 'Uncategorized';
-    if (!productCategories.some(existing => existing.toLowerCase() === pCat.toLowerCase())) {
+    const pCat = p.category && typeof p.category === 'object' ? (p.category.name || 'Uncategorized') : (p.category || 'Uncategorized');
+    if (!productCategories.some(existing => String(existing).toLowerCase() === String(pCat).toLowerCase())) {
       productCategories.push(pCat);
     }
   });
@@ -22,7 +27,7 @@ export default function StorefrontHome({ storeData, products, categories = [] })
       categoriesToRender.push({
         id: cat.id,
         name: cat.name,
-        slug: cat.slug || cat.name.toLowerCase().replace(/[^a-z0-9]/g, ''),
+        slug: cat.slug || String(cat.name || '').toLowerCase().replace(/[^a-z0-9]/g, ''),
         isCustom: true
       });
     });
@@ -30,11 +35,11 @@ export default function StorefrontHome({ storeData, products, categories = [] })
   
   // Then, add any categories from products that aren't already in the list
   productCategories.forEach(catName => {
-    if (!categoriesToRender.some(c => (c.name || '').toLowerCase() === catName.toLowerCase() || String(c.id) === String(catName))) {
+    if (!categoriesToRender.some(c => String(c.name || '').toLowerCase() === String(catName).toLowerCase() || String(c.id) === String(catName))) {
       categoriesToRender.push({
         id: catName,
         name: catName,
-        slug: catName.toLowerCase().replace(/[^a-z0-9]/g, ''),
+        slug: String(catName).toLowerCase().replace(/[^a-z0-9]/g, ''),
         isCustom: false
       });
     }
@@ -50,36 +55,68 @@ export default function StorefrontHome({ storeData, products, categories = [] })
     }
   }, []);
 
+  const { addToCart, toggleWishlist, isInWishlist } = useStorefrontCart();
+
   const renderProductGrid = (items) => (
     items && items.length > 0 ? (
       <div className="storefront-product-grid">
         {items.map(product => (
-          <div key={product.id} className="storefront-product-card">
-            <div className="storefront-product-image-container">
-              <img 
-                src={product.image || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200"} 
-                alt={product.name} 
-                className="storefront-product-image"
-              />
-              <div className="storefront-product-heart">♥</div>
-            </div>
-            <div className="storefront-product-details">
-              <div className="storefront-product-title">{product.name}</div>
-              <div className="storefront-product-rating">
-                <span className="rating-badge">
-                  {product.rating || "4.5"} ★
-                </span>
-                <span className="rating-count">(1,234)</span>
+          <div key={product.id} className="storefront-product-card position-relative">
+            <Link to={`/product/${product.id}`} className="text-decoration-none text-dark d-block">
+              <div className="storefront-product-image-container">
+                <img 
+                  src={product.image || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200"} 
+                  alt={product.name} 
+                  className="storefront-product-image"
+                />
               </div>
-              <div className="storefront-product-price-row">
-                <span className="storefront-product-price">{typeof product.price === 'string' ? product.price : `₹${Math.floor(product.price * 80)}`}</span>
-                {typeof product.price === 'number' && (
-                  <span className="storefront-product-original-price">₹{Math.floor((product.price * 80) * 1.5)}</span>
-                )}
-                <span className="storefront-product-discount">33% off</span>
+              <div className="storefront-product-details pb-5">
+                <div className="storefront-product-title">{product.name}</div>
+                <div className="storefront-product-rating">
+                  <span className="rating-badge">
+                    {product.rating || "4.5"} ★
+                  </span>
+                  <span className="rating-count">(1,234)</span>
+                </div>
+                <div className="storefront-product-price-row">
+                  <span className="storefront-product-price">{typeof product.price === 'string' ? product.price : `₹${Math.floor(product.price * 80)}`}</span>
+                  {typeof product.price === 'number' && (
+                    <span className="storefront-product-original-price">₹{Math.floor((product.price * 80) * 1.5)}</span>
+                  )}
+                  <span className="storefront-product-discount">33% off</span>
+                </div>
+                <div className="storefront-product-delivery">Free delivery</div>
               </div>
-              <div className="storefront-product-delivery">Free delivery</div>
+            </Link>
+            
+            {/* Wishlist Button (absolute top right) */}
+            <button 
+              className="btn position-absolute top-0 end-0 m-2 rounded-circle shadow-sm bg-white"
+              style={{ width: '32px', height: '32px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                requireAuth(() => toggleWishlist(product));
+              }}
+            >
+              <Heart size={16} fill={isInWishlist(product.id) ? '#ff4757' : 'none'} color={isInWishlist(product.id) ? '#ff4757' : '#ced4da'} />
+            </button>
+
+            {/* Add to Cart Button (absolute bottom) */}
+            <div className="position-absolute bottom-0 start-0 w-100 p-2" style={{ zIndex: 2 }}>
+              <button 
+                className="btn w-100 fw-bold d-flex align-items-center justify-content-center gap-2"
+                style={{ backgroundColor: '#ff9f00', color: '#fff', border: 'none', fontSize: '0.85rem', padding: '8px' }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  requireAuth(() => addToCart(product, 1));
+                }}
+              >
+                <ShoppingCart size={16} /> Add to Cart
+              </button>
             </div>
+
           </div>
         ))}
       </div>
@@ -104,8 +141,8 @@ export default function StorefrontHome({ storeData, products, categories = [] })
       {categoriesToRender.length > 0 ? (
         categoriesToRender.map(cat => {
           const catProducts = products.filter(p => {
-            const pCat = (p.category || 'Uncategorized').toLowerCase();
-            return String(pCat) === String(cat.id).toLowerCase() || pCat === (cat.name || '').toLowerCase() || pCat === (cat.slug || '').toLowerCase();
+            const pCat = String((p.category && typeof p.category === 'object' ? p.category.name : p.category) || 'Uncategorized').toLowerCase();
+            return pCat === String(cat.id).toLowerCase() || pCat === String(cat.name || '').toLowerCase() || pCat === String(cat.slug || '').toLowerCase();
           });
           
           if (catProducts.length === 0) return null;

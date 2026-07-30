@@ -1876,5 +1876,17 @@ select:-webkit-autofill {
   transform: translateY(0) !important;
 }
 
-
-
+/* OVERRIDES FOR ADMIN DASHBOARD LIGHT THEME */
+.admin-root .text-muted,
+.admin-root .text-secondary,
+.admin-root .text-white-50,
+.admin-root .text-black-50,
+.admin-root .fs-8.text-muted,
+.admin-root .fs-7.text-muted,
+.admin-root .fs-9.text-muted {
+  color: #6d7175 !important;
+}
+.admin-root .text-dark,
+.admin-root .text-white {
+  color: #202223 !important;
+}

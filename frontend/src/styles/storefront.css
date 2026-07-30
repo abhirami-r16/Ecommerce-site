@@ -15,12 +15,26 @@ html {
 .storefront-app-root h2, 
 .storefront-app-root h3, 
 .storefront-app-root h4, 
+.storefront-app-root h5, 
+.storefront-app-root h6, 
 .storefront-app-root p, 
 .storefront-app-root span, 
 .storefront-app-root div,
 .storefront-app-root label,
 .storefront-app-root li {
-  color: inherit;
+  color: inherit !important;
+}
+
+.storefront-app-root .form-control,
+.storefront-app-root .form-select,
+.storefront-app-root input {
+  color: #212121 !important;
+  background-color: #ffffff !important;
+}
+
+.storefront-app-root .text-secondary,
+.storefront-app-root .text-muted {
+  color: #6c757d !important;
 }
 
 .scroll-mt {
