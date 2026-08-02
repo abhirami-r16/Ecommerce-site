@@ -1224,7 +1224,7 @@ export default function AdminDashboard() {
       {/* ADD CATEGORY MODAL */}
       {showAddCatModal && (
         <div className="position-fixed top-0 bottom-0 start-0 end-0 bg-white bg-opacity-75 d-flex align-items-center justify-content-center p-3" style={{ zIndex: 1050 }}>
-          <div className=" w-100" style={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: "8px", padding: "20px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }} style={{ maxWidth: 400 }}>
+          <div className=" w-100" style={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: "8px", padding: "20px", boxShadow: "0 1px 2px rgba(0,0,0,0.05)", maxWidth: 400 }}>
             <div className="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2" style={{ borderColor: "rgba(212,175,55,0.2)" }}>
               <h3 className="fs-6 font-bold text-warning mb-0">Create Global Category</h3>
               <button onClick={() => setShowAddCatModal(false)} className="btn btn-sm text-secondary p-0">✕</button>
