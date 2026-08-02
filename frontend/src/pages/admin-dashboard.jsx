@@ -20,7 +20,6 @@ const GOLD_DEEP = "#8a6d1f";
 
 const adminLinks = [
   { key: "dashboard", label: "Overview", icon: LayoutDashboard },
-  { key: "products", label: "Products", icon: Package },
   { key: "stores", label: "Stores", icon: Store },
   { key: "users", label: "Users", icon: Users },
   { key: "categories", label: "Categories", icon: Tag },
