@@ -7,7 +7,7 @@ export default function StorefrontLoginModal() {
   const { login, register } = useAuth();
   const { isLoginModalOpen, closeLoginModal } = useStorefrontAuth();
 
-  const [isRegistering, setIsRegistering] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(true);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

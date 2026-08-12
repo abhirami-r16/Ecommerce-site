@@ -39,6 +39,30 @@ const getSubdomain = () => {
 function AppRoutes() {
   const subdomain = getSubdomain();
 
+  // Clean up massive base64 images to prevent QuotaExceededError
+  React.useEffect(() => {
+    try {
+      const saved = localStorage.getItem('aureum_owner_products');
+      if (saved) {
+        let products = JSON.parse(saved);
+        let changed = false;
+        products = products.map(p => {
+          if (p.image && typeof p.image === 'string' && p.image.startsWith('data:image/') && p.image.length > 50000) {
+            changed = true;
+            return { ...p, image: '' };
+          }
+          return p;
+        });
+        if (changed) {
+          localStorage.setItem('aureum_owner_products', JSON.stringify(products));
+          console.log('Cleaned up massive base64 images from local storage to free quota.');
+        }
+      }
+    } catch (e) {
+      console.error('Failed to clean up localStorage', e);
+    }
+  }, []);
+
   if (subdomain) {
     return (
       <BrowserRouter>
