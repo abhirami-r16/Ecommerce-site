@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStorefrontCart } from '../../context/StorefrontCartContext';
+import { normalizeProductImage } from '../../utils/imageUtils';
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -40,9 +41,9 @@ export default function Checkout() {
 
     const orderPayload = {
       store_id: storeId,
-      customer_name: `${formData.firstName} ${formData.lastName}`,
-      customer_email: formData.email,
-      shipping_address: `${formData.address}, ${formData.city}, ${formData.zip}`,
+      customer_name: formData.firstName,
+      customer_email: 'guest@example.com', // Default since email field was removed
+      shipping_address: `${formData.address}, ${formData.city}`,
       payment_method: formData.paymentMethod,
       items: cartItems.map(item => ({
         product_id: item.id,
@@ -102,7 +103,7 @@ export default function Checkout() {
           <h2 className="fs-2 font-bold mb-3">Order Confirmed!</h2>
           <p className="text-secondary mb-4 fs-6 lh-lg">
             Thank you for your purchase. Your order has been successfully placed. 
-            We've sent a confirmation email to <strong>{formData.email}</strong> with your order details.
+            We've saved your order details and they are currently being processed.
           </p>
           <button className="btn btn-primary px-4 py-2" onClick={() => navigate('/')}>
             Continue Shopping
@@ -122,29 +123,17 @@ export default function Checkout() {
             <h3 className="fs-5 fw-bold mb-4">Shipping Information</h3>
             <form id="checkout-form" onSubmit={handleSubmit}>
               <div className="row g-3">
-                <div className="col-md-6">
-                  <label className="form-label fs-8 text-secondary fw-semibold">First Name</label>
-                  <input type="text" className="form-control" name="firstName" required onChange={handleInputChange} />
-                </div>
-                <div className="col-md-6">
-                  <label className="form-label fs-8 text-secondary fw-semibold">Last Name</label>
-                  <input type="text" className="form-control" name="lastName" required onChange={handleInputChange} />
-                </div>
                 <div className="col-12">
-                  <label className="form-label fs-8 text-secondary fw-semibold">Email Address</label>
-                  <input type="email" className="form-control" name="email" required onChange={handleInputChange} />
+                  <label className="form-label fs-8 text-secondary fw-semibold">Full Name</label>
+                  <input type="text" className="form-control" name="firstName" required onChange={handleInputChange} />
                 </div>
                 <div className="col-12">
                   <label className="form-label fs-8 text-secondary fw-semibold">Street Address</label>
                   <input type="text" className="form-control" name="address" required onChange={handleInputChange} />
                 </div>
-                <div className="col-md-8">
+                <div className="col-12">
                   <label className="form-label fs-8 text-secondary fw-semibold">City</label>
                   <input type="text" className="form-control" name="city" required onChange={handleInputChange} />
-                </div>
-                <div className="col-md-4">
-                  <label className="form-label fs-8 text-secondary fw-semibold">ZIP Code</label>
-                  <input type="text" className="form-control" name="zip" required onChange={handleInputChange} />
                 </div>
               </div>
             </form>
@@ -186,8 +175,21 @@ export default function Checkout() {
               </label>
             </div>
             {formData.paymentMethod === 'online' && (
-              <div className="mt-3 p-3 bg-light rounded text-secondary fs-7 text-center border">
-                Online payment integration is currently running in test mode.
+              <div className="mt-3 p-4 bg-light rounded border">
+                <div className="mb-3">
+                  <label className="form-label fs-8 text-secondary fw-semibold">Card Number</label>
+                  <input type="text" className="form-control" placeholder="0000 0000 0000 0000" maxLength="19" required={formData.paymentMethod === 'online'} />
+                </div>
+                <div className="row g-3">
+                  <div className="col-6">
+                    <label className="form-label fs-8 text-secondary fw-semibold">Expiry Date</label>
+                    <input type="text" className="form-control" placeholder="MM/YY" maxLength="5" required={formData.paymentMethod === 'online'} />
+                  </div>
+                  <div className="col-6">
+                    <label className="form-label fs-8 text-secondary fw-semibold">CVV</label>
+                    <input type="password" className="form-control" placeholder="123" maxLength="4" required={formData.paymentMethod === 'online'} />
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -200,14 +202,22 @@ export default function Checkout() {
               {cartItems.map((item, idx) => (
                 <div key={idx} className="d-flex align-items-center gap-3">
                   <div style={{ width: 50, height: 50 }} className="bg-light border rounded overflow-hidden flex-shrink-0 position-relative">
-                    <img src={item.image} alt={item.name} className="w-100 h-100 object-fit-cover" />
+                    <img src={normalizeProductImage(item.image || item.image_url, item.name)} alt={item.name} className="w-100 h-100 object-fit-cover" />
                     <span className="position-absolute top-0 end-0 badge bg-secondary rounded-circle" style={{ transform: 'translate(25%, -25%)' }}>
                       {item.quantity}
                     </span>
                   </div>
                   <div className="flex-grow-1">
                     <div className="fs-7 fw-bold">{item.name}</div>
-                    <div className="fs-8 text-secondary">${Number(item.price).toFixed(2)}</div>
+                    {item.selectedSize && (
+                      <div className="fs-8 text-secondary mt-1">Size: {item.selectedSize}</div>
+                    )}
+                    {item.selectedColor && (
+                      <div className="fs-8 text-secondary mt-1 text-capitalize">Color: {item.selectedColor}</div>
+                    )}
+                  </div>
+                  <div className="fs-7 fw-semibold">
+                    ₹{(Number(item.price) * item.quantity).toFixed(2)}
                   </div>
                 </div>
               ))}
@@ -216,7 +226,7 @@ export default function Checkout() {
             <div className="border-top pt-3 mb-3">
               <div className="d-flex justify-content-between mb-2 fs-7 text-secondary">
                 <span>Subtotal</span>
-                <span>${cartTotal.toFixed(2)}</span>
+                <span>₹{cartTotal.toFixed(2)}</span>
               </div>
               <div className="d-flex justify-content-between mb-3 fs-7 text-secondary">
                 <span>Shipping</span>
@@ -226,17 +236,34 @@ export default function Checkout() {
             
             <div className="d-flex justify-content-between align-items-center border-top pt-3 mb-4 fw-bold fs-5">
               <span>Total</span>
-              <span>${cartTotal.toFixed(2)}</span>
+              <span>₹{cartTotal.toFixed(2)}</span>
             </div>
-            <button 
-              type="submit" 
-              form="checkout-form"
-              className="btn w-100 py-3 fw-bold text-white fs-6 mt-4" 
-              style={{ backgroundColor: '#fb641b' }}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Processing...' : 'Place Order'}
-            </button>
+            <div className="d-flex flex-column gap-3 mt-4">
+              <button 
+                type="submit" 
+                form="checkout-form"
+                className="btn w-100 py-3 fw-bold text-white fs-6" 
+                style={{ backgroundColor: '#fb641b' }}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Processing...' : 'Place Order'}
+              </button>
+              
+              <button 
+                type="button" 
+                className="btn w-100 py-3 fw-bold text-white fs-6 d-flex justify-content-center align-items-center gap-2" 
+                style={{ backgroundColor: '#25D366' }}
+                onClick={() => {
+                  const text = encodeURIComponent(`Hi, I would like to place an order for the following items:\n${cartItems.map(i => `- ${i.quantity}x ${i.name}`).join('\n')}\nTotal: $${cartTotal.toFixed(2)}`);
+                  window.open(`https://wa.me/1234567890?text=${text}`, '_blank');
+                }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                </svg>
+                Buy via WhatsApp
+              </button>
+            </div>
           </div>
         </div>
       </div>

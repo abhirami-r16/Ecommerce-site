@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ShoppingCart, Heart, Trash2 } from 'lucide-react';
 import { useStorefrontCart } from '../../context/StorefrontCartContext';
 import { useStorefrontAuth } from '../../context/StorefrontAuthContext';
+import { normalizeProductImage } from '../../utils/imageUtils';
 
 export default function Wishlist() {
   const { wishlistItems, toggleWishlist, addToCart } = useStorefrontCart();
@@ -19,7 +20,7 @@ export default function Wishlist() {
               <Link to={`/product/${product.id}`} className="text-decoration-none text-dark d-block">
                 <div className="storefront-product-image-container">
                   <img 
-                    src={product.image || product.image_url || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200"} 
+                    src={normalizeProductImage(product.image || product.image_url, product.name)} 
                     alt={product.name} 
                     className="storefront-product-image"
                   />
@@ -30,10 +31,25 @@ export default function Wishlist() {
                     <span className="rating-badge">
                       {product.rating || "4.5"} ★
                     </span>
-                    <span className="rating-count">(1,234)</span>
                   </div>
-                  <div className="storefront-product-price-row">
-                    <span className="storefront-product-price">{typeof product.price === 'string' ? product.price : `₹${Math.floor(product.price * 80)}`}</span>
+                  <div className="storefront-product-price-row" style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+                    {product.compare_price && Number(product.compare_price) > Number(product.price) ? (
+                      <>
+                        <span className="storefront-product-original-price" style={{ textDecoration: 'line-through', color: '#878787', fontSize: '14px' }}>
+                          ₹{Number(product.compare_price).toLocaleString('en-IN')}
+                        </span>
+                        <span className="storefront-product-price" style={{ color: '#212121', fontSize: '16px', fontWeight: '500' }}>
+                          ₹{Number(product.price).toLocaleString('en-IN')}
+                        </span>
+                        <span className="storefront-product-discount" style={{ color: '#388e3c', fontSize: '13px', fontWeight: '500' }}>
+                          — {Math.round(((Number(product.compare_price) - Number(product.price)) / Number(product.compare_price)) * 100)}% OFF
+                        </span>
+                      </>
+                    ) : (
+                      <span className="storefront-product-price" style={{ color: '#212121', fontSize: '16px', fontWeight: '500' }}>
+                        ₹{Number(product.price).toLocaleString('en-IN')}
+                      </span>
+                    )}
                   </div>
                   <div className="storefront-product-delivery text-success fs-8 mt-1">In Stock</div>
                 </div>

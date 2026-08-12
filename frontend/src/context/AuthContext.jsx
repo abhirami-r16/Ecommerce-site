@@ -78,43 +78,36 @@ export const AuthProvider = ({ children }) => {
           existingName = registeredUsers[normalizedEmail].name;
           existingRole = registeredUsers[normalizedEmail].role;
           existingPassword = registeredUsers[normalizedEmail].password;
-        } else {
-          // Fallback to checking the current logged in session if any
-          const saved = localStorage.getItem('shopnest_user');
-          if (saved) {
-            const parsed = JSON.parse(saved);
-            if (parsed && parsed.name && (!email || (parsed.email && parsed.email.toLowerCase().trim() === normalizedEmail))) {
-              existingName = parsed.name;
-              existingRole = parsed.role || role;
-            }
-          }
+        } else if (normalizedEmail === 'admin@gmail.com') {
+          // Hardcoded admin
+          existingName = 'Sarah J.';
+          existingRole = 'admin';
+          existingPassword = 'admin';
         }
       } catch (e) {}
 
-      const fallbackUser = {
-        id: getStableUserId(normalizedEmail, 1),
-        name: existingName || (existingRole === 'owner' ? 'Store Manager' : existingRole === 'customer' ? 'Sarah Miller' : 'Sarah J.'),
-        email: normalizedEmail || 'sarah@margasstore.com',
-        role: existingRole,
-      };
+      // Enforce registration
+      if (!existingPassword) {
+        return { success: false, message: 'Account not found. Please register first.' };
+      }
 
-      // Mock Password Validation
-      if (existingPassword && existingPassword !== password) {
+      // Password Validation
+      if (existingPassword !== password) {
         return { success: false, message: 'Incorrect password for this email address.' };
       }
 
-      if (isDemo || !err.response || err.response?.status === 401) {
-        const demoToken = 'demo-token-' + Date.now();
-        localStorage.setItem('shopnest_token', demoToken);
-        localStorage.setItem('shopnest_user', JSON.stringify(fallbackUser));
-        setUser(fallbackUser);
-        return { success: true, user: fallbackUser };
-      }
-
-      return {
-        success: false,
-        message: err.response?.data?.message || 'Login failed. Please check credentials.'
+      const validUser = {
+        id: getStableUserId(normalizedEmail, 1),
+        name: existingName,
+        email: normalizedEmail,
+        role: existingRole,
       };
+
+      const demoToken = 'demo-token-' + Date.now();
+      localStorage.setItem('shopnest_token', demoToken);
+      localStorage.setItem('shopnest_user', JSON.stringify(validUser));
+      setUser(validUser);
+      return { success: true, user: validUser };
     }
   };
 

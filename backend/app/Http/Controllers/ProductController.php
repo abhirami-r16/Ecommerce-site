@@ -60,6 +60,8 @@ class ProductController extends Controller
             'owner_id'        => 'nullable|integer',
             'owner_name'      => 'nullable|string|max:255',
             'owner_email'     => 'nullable|string|max:255',
+            'color'           => 'nullable|string|max:255',
+            'size'            => 'nullable|string|max:255',
         ]);
 
         // Verify store_id actually exists — fall back to null if not found
@@ -93,6 +95,8 @@ class ProductController extends Controller
             'image'          => $validated['image'] ?? 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&q=80',
             'status'         => $status,
             'is_active'      => $validated['is_active'] ?? true,
+            'color'          => $validated['color'] ?? null,
+            'size'           => $validated['size'] ?? null,
         ]);
 
         return response()->json($product->load(['category', 'store']), 201);
@@ -123,6 +127,8 @@ class ProductController extends Controller
             'description' => 'nullable|string',
             'image' => 'nullable|string',
             'is_active' => 'nullable|boolean',
+            'color' => 'nullable|string|max:255',
+            'size' => 'nullable|string|max:255',
         ]);
 
         if (isset($validated['name']) && $validated['name'] !== $product->name) {

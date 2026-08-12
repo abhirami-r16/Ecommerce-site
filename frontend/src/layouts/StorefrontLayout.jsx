@@ -85,12 +85,7 @@ export default function StorefrontLayout({ storeData, categories = [], products 
           <div className="storefront-nav-actions">
             {user && user.id ? (
               <div className="d-flex align-items-center gap-3">
-                <div className="storefront-nav-item d-none d-md-flex text-white gap-2 fw-semibold">
-                  <User size={16} /> Hi, {user.name.split(' ')[0]}
-                </div>
-                <button className="storefront-login-btn bg-transparent text-white border border-light" onClick={logout}>
-                  <LogOut size={14} className="me-1" /> Logout
-                </button>
+                {/* User greeting and logout removed as requested */}
               </div>
             ) : (
               <button 
@@ -98,7 +93,7 @@ export default function StorefrontLayout({ storeData, categories = [], products 
                 style={{ color: '#2874f0', height: '36px', border: 'none' }}
                 onClick={openLoginModal}
               >
-                Login
+                Create account
               </button>
             )}
 

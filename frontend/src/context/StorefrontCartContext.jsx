@@ -12,6 +12,15 @@ export const StorefrontCartProvider = ({ children, storeId }) => {
   const [wishlistItems, setWishlistItems] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
+  const stripLargeImages = (items) => {
+    return items.map(item => {
+      if (item.image && typeof item.image === 'string' && item.image.startsWith('data:image/') && item.image.length > 50000) {
+        return { ...item, image: '' };
+      }
+      return item;
+    });
+  };
+
   // Load from local storage on mount or when storeId changes
   useEffect(() => {
     if (storeId) {
@@ -31,13 +40,27 @@ export const StorefrontCartProvider = ({ children, storeId }) => {
   // Save to local storage whenever cart or wishlist changes
   useEffect(() => {
     if (isLoaded && storeId) {
-      localStorage.setItem(cartKey, JSON.stringify(cartItems));
+      try {
+        localStorage.setItem(cartKey, JSON.stringify(stripLargeImages(cartItems)));
+      } catch (e) {
+        console.error('Error saving cart data', e);
+        if (e.name === 'QuotaExceededError') {
+          alert('Local storage is full. Cart item cannot be saved. Please remove some items.');
+        }
+      }
     }
   }, [cartItems, storeId, cartKey, isLoaded]);
 
   useEffect(() => {
     if (isLoaded && storeId) {
-      localStorage.setItem(wishlistKey, JSON.stringify(wishlistItems));
+      try {
+        localStorage.setItem(wishlistKey, JSON.stringify(stripLargeImages(wishlistItems)));
+      } catch (e) {
+        console.error('Error saving wishlist data', e);
+        if (e.name === 'QuotaExceededError') {
+          alert('Local storage is full. Wishlist item cannot be saved. Please remove some items.');
+        }
+      }
     }
   }, [wishlistItems, storeId, wishlistKey, isLoaded]);
 

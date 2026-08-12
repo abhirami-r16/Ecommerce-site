@@ -210,7 +210,7 @@ const normalizeProductImage = (rawUrl, productName = "") => {
   return cleanUrl;
 };
 
-const emptyProductForm = { name: "", sku: "", price: "", category: "Apparel", stock: "", image: "" };
+const emptyProductForm = { name: "", sku: "", price: "", compare_price: "", discount_percentage: "", category: "Apparel", stock: "", image: "", color: "", size: "" };
 
 export default function StoreOwnerDashboard() {
   const navigate = useNavigate();
@@ -479,11 +479,19 @@ export default function StoreOwnerDashboard() {
     }
     const outOfScope = all.filter(item => !matchesOwnerScope(item));
     const scopedProducts = productsList.filter((item) => matchesOwnerScope(item));
-    localStorage.setItem("aureum_owner_products", JSON.stringify([...outOfScope, ...scopedProducts]));
+    try {
+      localStorage.setItem("aureum_owner_products", JSON.stringify([...outOfScope, ...scopedProducts]));
+    } catch (e) {
+      console.warn("Could not save products to localStorage", e);
+    }
   }, [productsList, currentUserId, currentOwnerEmail, activeStore?.id]);
 
   useEffect(() => {
-    localStorage.setItem("aureum_owner_orders", JSON.stringify(ordersList));
+    try {
+      localStorage.setItem("aureum_owner_orders", JSON.stringify(ordersList));
+    } catch (e) {
+      console.warn("Could not save orders to localStorage", e);
+    }
   }, [ordersList]);
 
   useEffect(() => {
@@ -544,9 +552,12 @@ export default function StoreOwnerDashboard() {
             sku: p.sku || `SKU-${Math.floor(Math.random() * 900 + 100)}`,
             category: p.category?.name || p.category || "Uncategorized",
             price: typeof p.price === "number" ? `$${p.price.toFixed(2)}` : p.price,
+            compare_price: typeof p.compare_price === "number" ? `$${p.compare_price.toFixed(2)}` : p.compare_price,
             stock: p.stock_quantity ?? 0,
             status: p.status || (p.stock_quantity > 0 ? "In Stock" : "Out of Stock"),
-            image: p.image || getFallbackImageByName(p.name)
+            image: p.image || getFallbackImageByName(p.name),
+            color: p.color || null,
+            size: p.size || null
           })));
         } else {
           setProductsList([]);
@@ -1053,9 +1064,13 @@ export default function StoreOwnerDashboard() {
       name: product.name || "",
       sku: product.sku || "",
       price: String(product.price || "").replace(/^\$/, ""),
+      compare_price: product.compare_price ? String(product.compare_price).replace(/^\$/, "") : "",
+      discount_percentage: "",
       category: product.category || "Apparel",
-      stock: String(product.stock ?? ""),
-      image: product.image || ""
+      stock: product.stock_quantity ?? product.stock ?? "",
+      image: product.image || "",
+      color: product.color || "",
+      size: product.size || "",
     });
     setShowAddProduct(true);
   };
@@ -1095,6 +1110,7 @@ export default function StoreOwnerDashboard() {
       name: newProd.name.trim(),
       sku: newProd.sku.trim() || `SKU-${Math.floor(Math.random() * 900 + 100)}`,
       price: Number(String(newProd.price).replace(/[^0-9.]/g, "")) || 0,
+      compare_price: newProd.compare_price ? Number(String(newProd.compare_price).replace(/[^0-9.]/g, "")) : null,
       stock_quantity: normalizedStock,
       description: newProd.description?.trim() || "",
       image: normalizeProductImage(newProd.image, newProd.name),
@@ -1106,6 +1122,8 @@ export default function StoreOwnerDashboard() {
       owner_id: currentUserId,
       owner_name: user?.name || user?.owner_name || 'Owner',
       owner_email: currentOwnerEmail || user?.email || '',
+      color: newProd.color?.trim() || null,
+      size: newProd.size?.trim() || null,
     };
 
     const mapProduct = (p) => {
@@ -1127,9 +1145,12 @@ export default function StoreOwnerDashboard() {
         sku: p.sku,
         category: p.category?.name || p.category || newProd.category,
         price: typeof p.price === 'number' ? `$${p.price.toFixed(2)}` : p.price,
+        compare_price: typeof p.compare_price === 'number' ? `$${p.compare_price.toFixed(2)}` : p.compare_price,
         stock: p.stock_quantity ?? normalizedStock,
         status: p.status || status,
-        image: p.image || normalizeProductImage(newProd.image, newProd.name)
+        image: p.image || normalizeProductImage(newProd.image, newProd.name),
+        color: p.color || newProd.color || null,
+        size: p.size || newProd.size || null,
       };
     };
 
@@ -1158,38 +1179,9 @@ export default function StoreOwnerDashboard() {
           : [{ sku: created.sku, name: created.name, location: "Warehouse A1", stock: created.stock, reorder: 15, status: created.stock > 15 ? "Optimal" : created.stock > 0 ? "Low Stock" : "Out of Stock" }, ...prev]);
       }
     } catch (err) {
-      console.debug("Backend API product save failed, using local fallback", err);
-      const item = {
-        id: editingProduct?.backend_id ?? editingProduct?.id ?? Date.now(),
-        backend_id: editingProduct?.backend_id ?? editingProduct?.id ?? null,
-        ...ownerMeta,
-        user_id: editingProduct?.user_id ?? ownerMeta.user_id ?? currentUserId,
-        owner_id: editingProduct?.owner_id ?? ownerMeta.owner_id ?? currentUserId,
-        owner_name: editingProduct?.owner_name || ownerMeta.owner_name || 'Owner',
-        owner_email: editingProduct?.owner_email || ownerMeta.owner_email || currentOwnerEmail,
-        owner_role: editingProduct?.owner_role || ownerMeta.owner_role || 'owner',
-        store_id: editingProduct?.store_id ?? ownerMeta.store_id ?? activeStore?.id ?? null,
-        store_name: editingProduct?.store_name ?? ownerMeta.store_name ?? activeStore?.name ?? 'Owner Store',
-        store_slug: editingProduct?.store_slug ?? ownerMeta.store_slug ?? activeStoreSlug,
-        store_subdomain: editingProduct?.store_subdomain ?? ownerMeta.store_subdomain ?? activeStore?.subdomain ?? activeStoreSlug,
-        name: newProd.name.trim(),
-        sku: payload.sku,
-        category: newProd.category,
-        price: `$${payload.price}`,
-        stock: normalizedStock,
-        status,
-        image: payload.image
-      };
-
-      if (editingProduct) {
-        setProductsList(prev => prev.map(product => product.id === editingProduct.id ? item : product));
-        setInventoryList(prev => prev.map(inv => inv.sku === editingProduct.sku ? { ...inv, sku: item.sku, name: item.name, stock: item.stock, status: item.stock > inv.reorder ? "Optimal" : item.stock > 0 ? "Low Stock" : "Out of Stock" } : inv));
-      } else {
-        setProductsList(prev => [item, ...prev]);
-        setInventoryList(prev => prev.some(inv => inv.sku === item.sku)
-          ? prev.map(inv => inv.sku === item.sku ? { ...inv, name: item.name, stock: item.stock, status: item.stock > inv.reorder ? "Optimal" : item.stock > 0 ? "Low Stock" : "Out of Stock" } : inv)
-          : [{ sku: item.sku, name: item.name, location: "Warehouse A1", stock: item.stock, reorder: 15, status: item.stock > 15 ? "Optimal" : item.stock > 0 ? "Low Stock" : "Out of Stock" }, ...prev]);
-      }
+      console.error("Backend API product save failed", err);
+      alert("Failed to save product to the database. Error: " + (err.response?.data?.message || err.message));
+      return;
     }
 
     closeProductModal();
@@ -1535,16 +1527,14 @@ export default function StoreOwnerDashboard() {
               </div>
 
               {productsList.length === 0 ? (
-                <div className="gold-panel p-5 rounded-3 text-center my-3" style={{ background: "linear-gradient(135deg, #0f0e0c 0%, #161310 60%, #050505 100%)", border: "1px dashed rgba(212,175,55,0.4)" }}>
-                  <div className="w-16 h-16 rounded-circle bg-warning bg-opacity-15 text-warning d-inline-flex align-items-center justify-content-center mb-3">
-                    <Package size={34} />
-                  </div>
-                  <h2 className="fs-3 font-serif font-bold text-white mb-2">No Products Added Yet</h2>
-                  <p className="fs-7 text-muted max-w-md mx-auto mb-4" style={{ maxWidth: 480, lineHeight: 1.6 }}>
+                <div className="text-center py-5 px-4" style={{ background: "#ffffff", border: "1px dashed #dfe3e8", borderRadius: "8px", margin: "16px 0" }}>
+                  <Package size={48} style={{ color: "#c9cccf", marginBottom: 16 }} />
+                  <h2 className="fs-5 font-bold mb-2" style={{ color: "#202223" }}>No Products Added Yet</h2>
+                  <p className="fs-8 max-w-md mx-auto mb-4" style={{ color: "#6d7175", maxWidth: 480, lineHeight: 1.6 }}>
                     Your store catalog is currently empty. Click the button below to add your first product with SKU, category, price, and inventory stock.
                   </p>
-                  <button onClick={openAddProductModal} className="btn btn-gold-primary py-2.5 px-4 font-bold fs-7 d-inline-flex align-items-center gap-2">
-                    <Plus size={18} /> + Add Your First Product
+                  <button onClick={openAddProductModal} className="btn fw-bold" style={{ background: "#1c2226", color: "#fff", borderRadius: "6px" }}>
+                    <Plus size={16} className="me-1" /> Add Your First Product
                   </button>
                 </div>
               ) : (
@@ -1557,6 +1547,9 @@ export default function StoreOwnerDashboard() {
                             <input type="checkbox" className="form-check-input" />
                           </th>
                           <th className="border-0 py-3">Product</th>
+                          <th className="border-0 py-3">Color</th>
+                          <th className="border-0 py-3">Size</th>
+                          <th className="border-0 py-3">Price</th>
                           <th className="border-0 py-3">Status</th>
                           <th className="border-0 py-3">Inventory</th>
                           <th className="border-0 py-3">Collection</th>
@@ -1582,6 +1575,38 @@ export default function StoreOwnerDashboard() {
                                   />
                                 </div>
                                 <span className="fw-semibold fs-7" style={{ color: "#202223" }}>{p.name}</span>
+                              </div>
+                            </td>
+                            <td className="border-0 py-2 fs-7" style={{ color: "#6d7175" }}>{p.color || "—"}</td>
+                            <td className="border-0 py-2 fs-7" style={{ color: "#6d7175" }}>{p.size || "—"}</td>
+                            <td className="border-0 py-2">
+                              <div className="d-flex flex-column">
+                                <div className="d-flex align-items-baseline gap-1">
+                                  <span className="fw-semibold fs-7" style={{ color: "#202223" }}>{p.price}</span>
+                                  {(() => {
+                                    try {
+                                      if (!p.compare_price) return null;
+                                      const cmp = parseFloat(String(p.compare_price).replace(/[^0-9.]/g, ""));
+                                      const prc = parseFloat(String(p.price).replace(/[^0-9.]/g, ""));
+                                      if (isNaN(cmp) || isNaN(prc) || cmp <= prc || cmp === 0) return null;
+                                      const pct = Math.round(((cmp - prc) / cmp) * 100);
+                                      return (
+                                        <span style={{ color: "#388e3c", fontSize: "0.7rem", fontWeight: "600" }}>
+                                          — {pct}% OFF
+                                        </span>
+                                      );
+                                    } catch (e) { return null; }
+                                  })()}
+                                </div>
+                                {(() => {
+                                  try {
+                                    if (!p.compare_price) return null;
+                                    const cmp = parseFloat(String(p.compare_price).replace(/[^0-9.]/g, ""));
+                                    const prc = parseFloat(String(p.price).replace(/[^0-9.]/g, ""));
+                                    if (isNaN(cmp) || isNaN(prc) || cmp === prc) return null;
+                                    return <span className="text-muted fs-8 text-decoration-line-through">{p.compare_price}</span>;
+                                  } catch (e) { return null; }
+                                })()}
                               </div>
                             </td>
                             <td className="border-0">
@@ -2453,6 +2478,8 @@ export default function StoreOwnerDashboard() {
                               <th className="border-0 ps-4 py-2">Product</th>
                               <th className="border-0 py-2">SKU</th>
                               <th className="border-0 py-2">Collection</th>
+                              <th className="border-0 py-2">Color</th>
+                              <th className="border-0 py-2">Size</th>
                               <th className="border-0 py-2">Price</th>
                               <th className="border-0 py-2">Stock</th>
                               <th className="border-0 py-2">Status</th>
@@ -2479,7 +2506,38 @@ export default function StoreOwnerDashboard() {
                                   <code style={{ background: "#f1f2f4", padding: "1px 6px", borderRadius: 4, fontSize: "0.72rem", color: "#454f5b" }}>{p.sku || "—"}</code>
                                 </td>
                                 <td className="border-0 py-2 fs-8" style={{ color: "#6d7175" }}>{p.category || "—"}</td>
-                                <td className="border-0 py-2 fw-semibold fs-7" style={{ color: "#202223" }}>{p.price}</td>
+                                <td className="border-0 py-2 fs-8" style={{ color: "#6d7175" }}>{p.color || "—"}</td>
+                                <td className="border-0 py-2 fs-8" style={{ color: "#6d7175" }}>{p.size || "—"}</td>
+                                <td className="border-0 py-2">
+                                  <div className="d-flex flex-column">
+                                    <div className="d-flex align-items-baseline gap-1">
+                                      <span className="fw-semibold fs-7" style={{ color: "#202223" }}>{p.price}</span>
+                                      {(() => {
+                                        try {
+                                          if (!p.compare_price) return null;
+                                          const cmp = parseFloat(String(p.compare_price).replace(/[^0-9.]/g, ""));
+                                          const prc = parseFloat(String(p.price).replace(/[^0-9.]/g, ""));
+                                          if (isNaN(cmp) || isNaN(prc) || cmp <= prc || cmp === 0) return null;
+                                          const pct = Math.round(((cmp - prc) / cmp) * 100);
+                                          return (
+                                            <span style={{ color: "#388e3c", fontSize: "0.7rem", fontWeight: "600" }}>
+                                              — {pct}% OFF
+                                            </span>
+                                          );
+                                        } catch (e) { return null; }
+                                      })()}
+                                    </div>
+                                    {(() => {
+                                      try {
+                                        if (!p.compare_price) return null;
+                                        const cmp = parseFloat(String(p.compare_price).replace(/[^0-9.]/g, ""));
+                                        const prc = parseFloat(String(p.price).replace(/[^0-9.]/g, ""));
+                                        if (isNaN(cmp) || isNaN(prc) || cmp === prc) return null;
+                                        return <span className="text-muted fs-8 text-decoration-line-through">{p.compare_price}</span>;
+                                      } catch (e) { return null; }
+                                    })()}
+                                  </div>
+                                </td>
                                 <td className="border-0 py-2 fw-bold fs-7" style={{ color: "#202223" }}>{p.stock}</td>
                                 <td className="border-0 py-2">
                                   <span style={{
@@ -2622,15 +2680,86 @@ export default function StoreOwnerDashboard() {
                   <p className="fs-8 mb-0" style={{ color: "#6d7175" }}>Manage promotional codes and automatic discounts.</p>
                 </div>
               </div>
-              <div style={{ background: "#ffffff", border: "1px dashed #dfe3e8", borderRadius: "8px", padding: "40px", textAlign: "center", margin: "16px 0", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
-                <div className="w-16 h-16 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style={{ background: "rgba(0,127,95,0.1)", color: "#007f5f" }}>
-                  <Percent size={34} />
-                </div>
-                <h2 className="fs-3 font-bold mb-2" style={{ color: "#202223" }}>Discount Engine</h2>
-                <p className="fs-7 max-w-md mx-auto mb-4" style={{ color: "#6d7175", maxWidth: 480, lineHeight: 1.6 }}>
-                  Create percentage or fixed amount discount codes to share with your customers.
-                </p>
-              </div>
+              {(() => {
+                const discountedProducts = productsList.filter(p => {
+                  try {
+                    if (!p.compare_price) return false;
+                    const cmp = parseFloat(String(p.compare_price).replace(/[^0-9.]/g, ""));
+                    const prc = parseFloat(String(p.price).replace(/[^0-9.]/g, ""));
+                    return !isNaN(cmp) && !isNaN(prc) && cmp > prc;
+                  } catch(e) {
+                    return false;
+                  }
+                });
+
+                return discountedProducts.length === 0 ? (
+                  <div style={{ background: "#ffffff", border: "1px dashed #dfe3e8", borderRadius: "8px", padding: "40px", textAlign: "center", margin: "16px 0", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
+                    <div className="w-16 h-16 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style={{ background: "rgba(0,127,95,0.1)", color: "#007f5f" }}>
+                      <Percent size={34} />
+                    </div>
+                    <h2 className="fs-3 font-bold mb-2" style={{ color: "#202223" }}>No active discounts</h2>
+                    <p className="fs-7 max-w-md mx-auto mb-4" style={{ color: "#6d7175", maxWidth: 480, lineHeight: 1.6 }}>
+                      You don't have any products with an active discount. Edit a product and set a compare-at price to create a discount.
+                    </p>
+                  </div>
+                ) : (
+                  <div style={{ background: "#ffffff", border: "1px solid #dfe3e8", borderRadius: "8px", margin: "16px 0", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
+                    <div className="table-responsive">
+                      <table className="table table-hover mb-0 align-middle border-0">
+                        <thead>
+                          <tr className="fs-8 fw-semibold" style={{ color: "#6d7175", background: "#f9fafb", borderBottom: "1px solid #e4e5e7" }}>
+                            <th className="border-0 ps-4 py-2">Product</th>
+                            <th className="border-0 py-2">Original Price</th>
+                            <th className="border-0 py-2">Discounted Price</th>
+                            <th className="border-0 py-2">Discount Amount</th>
+                            <th className="border-0 text-end pe-4 py-2">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {discountedProducts.map(p => {
+                            const cmp = parseFloat(String(p.compare_price).replace(/[^0-9.]/g, ""));
+                            const prc = parseFloat(String(p.price).replace(/[^0-9.]/g, ""));
+                            const discountAmount = cmp - prc;
+                            const discountPercentage = Math.round((discountAmount / cmp) * 100);
+                            
+                            return (
+                              <tr key={p.id} style={{ borderBottom: "1px solid #f1f2f4" }}>
+                                <td className="border-0 ps-4 py-3">
+                                  <div className="d-flex align-items-center gap-2">
+                                    <div className="rounded overflow-hidden flex-shrink-0" style={{ width: 36, height: 36, border: "1px solid #dfe3e8", background: "#f1f2f4" }}>
+                                      <img
+                                        src={normalizeProductImage(p.image, p.name)}
+                                        alt={p.name}
+                                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                        onError={(e) => { e.target.src = getFallbackImageByName(p.name); }}
+                                      />
+                                    </div>
+                                    <span className="fw-semibold fs-7 text-truncate" style={{ color: "#202223", maxWidth: 160 }}>{p.name}</span>
+                                  </div>
+                                </td>
+                                <td className="border-0 py-3 text-decoration-line-through text-muted fs-8">
+                                  {p.compare_price}
+                                </td>
+                                <td className="border-0 py-3 fw-bold fs-7 text-success">
+                                  {p.price}
+                                </td>
+                                <td className="border-0 py-3">
+                                  <span className="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill px-2 py-1 fs-8">
+                                    {discountPercentage}% OFF
+                                  </span>
+                                </td>
+                                <td className="border-0 text-end pe-4 py-3">
+                                  <span className="badge" style={{ background: "#e3f1df", color: "#007f5f", borderRadius: 4, fontWeight: 600 }}>Active</span>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           )}
         </main>
@@ -2650,13 +2779,39 @@ export default function StoreOwnerDashboard() {
                 <input required value={newProd.name} onChange={(e) => setNewProd({ ...newProd, name: e.target.value })} className="form-control" style={{ border: "1px solid #dfe3e8", color: "#202223", backgroundColor: "#fafbfc" }} placeholder="e.g. Silk Scarf" />
               </div>
               <div className="row g-2">
-                <div className="col-6">
+                <div className="col-4">
                   <label className="mb-1 fs-8 fw-semibold" style={{ color: "#454f5b" }}>Price *</label>
                   <input required value={newProd.price} onChange={(e) => setNewProd({ ...newProd, price: e.target.value })} className="form-control" style={{ border: "1px solid #dfe3e8", color: "#202223", backgroundColor: "#fafbfc" }} placeholder="$34.00" />
                 </div>
-                <div className="col-6">
-                  <label className="mb-1 fs-8 fw-semibold" style={{ color: "#454f5b" }}>Stock Quantity</label>
+                <div className="col-4">
+                  <label className="mb-1 fs-8 fw-semibold" style={{ color: "#454f5b" }}>Original Price</label>
+                  <input value={newProd.compare_price || ''} onChange={(e) => setNewProd({ ...newProd, compare_price: e.target.value })} className="form-control" style={{ border: "1px solid #dfe3e8", color: "#202223", backgroundColor: "#fafbfc" }} placeholder="$50.00" />
+                </div>
+                <div className="col-4">
+                  <label className="mb-1 fs-8 fw-semibold" style={{ color: "#454f5b" }}>Discount %</label>
+                  <input type="number" min="0" max="100" value={newProd.discount_percentage || ''} onChange={(e) => {
+                    const discount = e.target.value;
+                    const cp = parseFloat(String(newProd.compare_price).replace(/[^0-9.]/g, ""));
+                    let newPrice = newProd.price;
+                    if (cp && discount) {
+                      newPrice = (cp - (cp * (parseFloat(discount) / 100))).toFixed(2);
+                    }
+                    setNewProd({ ...newProd, discount_percentage: discount, price: newPrice });
+                  }} className="form-control" style={{ border: "1px solid #dfe3e8", color: "#202223", backgroundColor: "#fafbfc" }} placeholder="e.g. 20" />
+                </div>
+              </div>
+              <div className="row g-2">
+                <div className="col-4">
+                  <label className="mb-1 fs-8 fw-semibold" style={{ color: "#454f5b" }}>Stock</label>
                   <input type="number" min="0" value={newProd.stock} onChange={(e) => setNewProd({ ...newProd, stock: e.target.value })} className="form-control" style={{ border: "1px solid #dfe3e8", color: "#202223", backgroundColor: "#fafbfc" }} placeholder="10" />
+                </div>
+                <div className="col-4">
+                  <label className="mb-1 fs-8 fw-semibold" style={{ color: "#454f5b" }}>Color</label>
+                  <input value={newProd.color || ''} onChange={(e) => setNewProd({ ...newProd, color: e.target.value })} className="form-control" style={{ border: "1px solid #dfe3e8", color: "#202223", backgroundColor: "#fafbfc" }} placeholder="e.g. Red" />
+                </div>
+                <div className="col-4">
+                  <label className="mb-1 fs-8 fw-semibold" style={{ color: "#454f5b" }}>Size</label>
+                  <input value={newProd.size || ''} onChange={(e) => setNewProd({ ...newProd, size: e.target.value })} className="form-control" style={{ border: "1px solid #dfe3e8", color: "#202223", backgroundColor: "#fafbfc" }} placeholder="e.g. M" />
                 </div>
               </div>
               <div>
@@ -2678,14 +2833,22 @@ export default function StoreOwnerDashboard() {
                 </select>
               </div>
               <div>
-                <label className="mb-1 fs-8 fw-semibold" style={{ color: "#454f5b" }}>Product Image URL</label>
+                <label className="mb-1 fs-8 fw-semibold" style={{ color: "#454f5b" }}>Product Image Upload</label>
                 <input
-                  type="url"
-                  value={newProd.image}
-                  onChange={(e) => setNewProd({ ...newProd, image: e.target.value })}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setNewProd({ ...newProd, image: reader.result });
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
                   className="form-control"
                   style={{ border: "1px solid #dfe3e8", color: "#202223", backgroundColor: "#fafbfc" }}
-                  placeholder="https://images.unsplash.com/photo-..."
                 />
                 {newProd.image && (
                   <div className="mt-2 d-flex align-items-center gap-2 p-2 rounded" style={{ background: "#f9fafb", border: "1px dashed #dfe3e8" }}>
@@ -2904,97 +3067,105 @@ export default function StoreOwnerDashboard() {
       {/* CREATE STORE MODAL */}
       {showCreateStoreModal && (
         <div className="position-fixed top-0 bottom-0 start-0 end-0 bg-dark bg-opacity-75 d-flex align-items-center justify-content-center p-3" style={{ zIndex: 1060 }}>
-          <div className="gold-panel w-100" style={{ maxWidth: 520 }}>
-            <div className="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2" style={{ borderColor: "rgba(212,175,55,0.2)" }}>
-              <h3 className="fs-6 font-bold text-warning mb-0 d-flex align-items-center gap-2">
+          <div className="bg-white w-100 rounded-3 shadow-sm border" style={{ maxWidth: 520, borderColor: "#dfe3e8" }}>
+            <div className="d-flex align-items-center justify-content-between p-3 border-bottom" style={{ borderColor: "#dfe3e8" }}>
+              <h3 className="fs-5 font-bold mb-0 d-flex align-items-center gap-2" style={{ color: "#202223" }}>
                 <PlusCircle size={18} /> Create New Store
               </h3>
-              <button onClick={() => setShowCreateStoreModal(false)} className="btn btn-sm text-muted p-0 border-0 bg-transparent">✕</button>
+              <button onClick={() => setShowCreateStoreModal(false)} className="btn btn-sm p-0 border-0 bg-transparent" style={{ color: "#6d7175" }}>✕</button>
             </div>
-            <form onSubmit={handleCreateStoreSubmit} className="d-flex flex-column gap-3 fs-7">
-              <div>
-                <label className="text-muted mb-1 fs-8">Store Name *</label>
-                <input
-                  required
-                  value={storeForm.name}
-                  onChange={(e) => setStoreForm({ ...storeForm, name: e.target.value })}
-                  className="form-control"
-                  placeholder="e.g. Aureum Luxury Living"
-                />
-              </div>
-
-              <div className="row g-2">
-                <div className="col-6">
-                  <label className="text-muted mb-1 fs-8">Category</label>
-                  <select
-                    value={storeForm.category}
-                    onChange={(e) => setStoreForm({ ...storeForm, category: e.target.value })}
-                    className="form-select"
-                  >
-                    <option value="Fashion & Apparel">Fashion & Apparel</option>
-                    <option value="Home & Living">Home & Living</option>
-                    <option value="Beauty & Cosmetics">Beauty & Cosmetics</option>
-                    <option value="Jewelry & Luxury">Jewelry & Luxury</option>
-                    <option value="General Retail">General Retail</option>
-                  </select>
-                </div>
-                <div className="col-6">
-                  <label className="text-muted mb-1 fs-8">Currency</label>
-                  <select
-                    value={storeForm.currency}
-                    onChange={(e) => setStoreForm({ ...storeForm, currency: e.target.value })}
-                    className="form-select"
-                  >
-                    <option value="USD ($)">USD ($)</option>
-                    <option value="EUR (€)">EUR (€)</option>
-                    <option value="INR (₹)">INR (₹)</option>
-                    <option value="GBP (£)">GBP (£)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="row g-2">
-                <div className="col-6">
-                  <label className="text-muted mb-1 fs-8">Support Email</label>
+            <div className="p-3">
+              <form onSubmit={handleCreateStoreSubmit} className="d-flex flex-column gap-3 fs-7">
+                <div>
+                  <label className="mb-1 fs-8 fw-semibold" style={{ color: "#454f5b" }}>Store Name *</label>
                   <input
-                    type="email"
-                    value={storeForm.email}
-                    onChange={(e) => setStoreForm({ ...storeForm, email: e.target.value })}
+                    required
+                    value={storeForm.name}
+                    onChange={(e) => setStoreForm({ ...storeForm, name: e.target.value })}
                     className="form-control"
-                    placeholder="support@brand.com"
+                    style={{ border: "1px solid #dfe3e8", color: "#202223", backgroundColor: "#fafbfc" }}
+                    placeholder="e.g. Aureum Luxury Living"
                   />
                 </div>
-                <div className="col-6">
-                  <label className="text-muted mb-1 fs-8">Owner Name</label>
-                  <input
-                    value={storeForm.ownerName}
-                    onChange={(e) => setStoreForm({ ...storeForm, ownerName: e.target.value })}
+
+                <div className="row g-2">
+                  <div className="col-6">
+                    <label className="mb-1 fs-8 fw-semibold" style={{ color: "#454f5b" }}>Category</label>
+                    <select
+                      value={storeForm.category}
+                      onChange={(e) => setStoreForm({ ...storeForm, category: e.target.value })}
+                      className="form-select"
+                      style={{ border: "1px solid #dfe3e8", color: "#202223", backgroundColor: "#fafbfc" }}
+                    >
+                      <option value="Fashion & Apparel">Fashion & Apparel</option>
+                      <option value="Home & Living">Home & Living</option>
+                      <option value="Beauty & Cosmetics">Beauty & Cosmetics</option>
+                      <option value="Jewelry & Luxury">Jewelry & Luxury</option>
+                      <option value="General Retail">General Retail</option>
+                    </select>
+                  </div>
+                  <div className="col-6">
+                    <label className="mb-1 fs-8 fw-semibold" style={{ color: "#454f5b" }}>Currency</label>
+                    <select
+                      value={storeForm.currency}
+                      onChange={(e) => setStoreForm({ ...storeForm, currency: e.target.value })}
+                      className="form-select"
+                      style={{ border: "1px solid #dfe3e8", color: "#202223", backgroundColor: "#fafbfc" }}
+                    >
+                      <option value="USD ($)">USD ($)</option>
+                      <option value="EUR (€)">EUR (€)</option>
+                      <option value="INR (₹)">INR (₹)</option>
+                      <option value="GBP (£)">GBP (£)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="row g-2">
+                  <div className="col-6">
+                    <label className="mb-1 fs-8 fw-semibold" style={{ color: "#454f5b" }}>Support Email</label>
+                    <input
+                      type="email"
+                      value={storeForm.email}
+                      onChange={(e) => setStoreForm({ ...storeForm, email: e.target.value })}
+                      className="form-control"
+                      style={{ border: "1px solid #dfe3e8", color: "#202223", backgroundColor: "#fafbfc" }}
+                      placeholder="support@mybrand.com"
+                    />
+                  </div>
+                  <div className="col-6">
+                    <label className="mb-1 fs-8 fw-semibold" style={{ color: "#454f5b" }}>Owner Name</label>
+                    <input
+                      value={storeForm.ownerName}
+                      onChange={(e) => setStoreForm({ ...storeForm, ownerName: e.target.value })}
+                      className="form-control"
+                      style={{ border: "1px solid #dfe3e8", color: "#202223", backgroundColor: "#fafbfc" }}
+                      placeholder="Owner Name"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-1 fs-8 fw-semibold" style={{ color: "#454f5b" }}>Store Description</label>
+                  <textarea
+                    rows="3"
+                    value={storeForm.description}
+                    onChange={(e) => setStoreForm({ ...storeForm, description: e.target.value })}
                     className="form-control"
-                    placeholder="Owner Name"
+                    style={{ border: "1px solid #dfe3e8", color: "#202223", backgroundColor: "#fafbfc" }}
+                    placeholder="Describe store collection & brand story..."
                   />
                 </div>
-              </div>
 
-              <div>
-                <label className="text-muted mb-1 fs-8">Store Description</label>
-                <textarea
-                  rows="3"
-                  value={storeForm.description}
-                  onChange={(e) => setStoreForm({ ...storeForm, description: e.target.value })}
-                  className="form-control"
-                  placeholder="Describe store collection & brand story..."
-                />
-              </div>
-
-              <div className="d-flex align-items-center justify-content-end gap-2 pt-2 border-top" style={{ borderColor: "rgba(212,175,55,0.15)" }}>
-                <button type="button" onClick={() => setShowCreateStoreModal(false)} className="btn btn-sm btn-outline-secondary px-3 py-2">
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-gold-primary btn-sm px-4 py-2">
-                  Create Store
-                </button>
-              </div>
-            </form>
+                <div className="d-flex align-items-center justify-content-end gap-2 pt-3 border-top mt-1" style={{ borderColor: "#dfe3e8" }}>
+                  <button type="button" onClick={() => setShowCreateStoreModal(false)} className="btn btn-sm btn-light border px-3 py-2" style={{ color: "#202223", backgroundColor: "#ffffff" }}>
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-dark btn-sm px-4 py-2" style={{ backgroundColor: "#202223", color: "#ffffff", border: "none" }}>
+                    Create Store
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}
@@ -3002,104 +3173,113 @@ export default function StoreOwnerDashboard() {
       {/* EDIT STORE DETAILS MODAL */}
       {showEditStoreModal && (
         <div className="position-fixed top-0 bottom-0 start-0 end-0 bg-dark bg-opacity-75 d-flex align-items-center justify-content-center p-3" style={{ zIndex: 1060 }}>
-          <div className="gold-panel w-100" style={{ maxWidth: 520 }}>
-            <div className="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2" style={{ borderColor: "rgba(212,175,55,0.2)" }}>
-              <h3 className="fs-6 font-bold text-warning mb-0 d-flex align-items-center gap-2">
+          <div className="bg-white w-100 rounded-3 shadow-sm border" style={{ maxWidth: 520, borderColor: "#dfe3e8" }}>
+            <div className="d-flex align-items-center justify-content-between p-3 border-bottom" style={{ borderColor: "#dfe3e8" }}>
+              <h3 className="fs-5 font-bold mb-0 d-flex align-items-center gap-2" style={{ color: "#202223" }}>
                 <Edit3 size={18} /> Edit Store Details
               </h3>
-              <button onClick={() => setShowEditStoreModal(false)} className="btn btn-sm text-muted p-0 border-0 bg-transparent">✕</button>
+              <button onClick={() => setShowEditStoreModal(false)} className="btn btn-sm p-0 border-0 bg-transparent" style={{ color: "#6d7175" }}>✕</button>
             </div>
-            <form onSubmit={handleEditStoreSubmit} className="d-flex flex-column gap-3 fs-7">
-              <div>
-                <label className="text-muted mb-1 fs-8">Store Name *</label>
-                <input
-                  required
-                  value={storeForm.name}
-                  onChange={(e) => setStoreForm({ ...storeForm, name: e.target.value })}
-                  className="form-control"
-                />
-              </div>
-
-              <div>
-                <label className="text-muted mb-1 fs-8">Subdomain Handle</label>
-                <div className="input-group">
+            <div className="p-3">
+              <form onSubmit={handleEditStoreSubmit} className="d-flex flex-column gap-3 fs-7">
+                <div>
+                  <label className="mb-1 fs-8 fw-semibold" style={{ color: "#454f5b" }}>Store Name *</label>
                   <input
-                    value={storeForm.subdomain}
-                    onChange={(e) => setStoreForm({ ...storeForm, subdomain: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") })}
+                    required
+                    value={storeForm.name}
+                    onChange={(e) => setStoreForm({ ...storeForm, name: e.target.value })}
                     className="form-control"
-                  />
-                  <span className="input-group-text bg-dark text-muted border-secondary fs-8">.storemanager.app</span>
-                </div>
-              </div>
-
-              <div className="row g-2">
-                <div className="col-6">
-                  <label className="text-muted mb-1 fs-8">Category</label>
-                  <select
-                    value={storeForm.category}
-                    onChange={(e) => setStoreForm({ ...storeForm, category: e.target.value })}
-                    className="form-select"
-                  >
-                    <option value="Fashion & Apparel">Fashion & Apparel</option>
-                    <option value="Home & Living">Home & Living</option>
-                    <option value="Beauty & Cosmetics">Beauty & Cosmetics</option>
-                    <option value="Jewelry & Luxury">Jewelry & Luxury</option>
-                    <option value="General Retail">General Retail</option>
-                  </select>
-                </div>
-                <div className="col-6">
-                  <label className="text-muted mb-1 fs-8">Store Status</label>
-                  <select
-                    value={storeForm.status}
-                    onChange={(e) => setStoreForm({ ...storeForm, status: e.target.value })}
-                    className="form-select"
-                  >
-                    <option value="Active">🟢 Active (Open for Orders)</option>
-                    <option value="Maintenance">🟡 Maintenance Mode</option>
-                    <option value="Draft">🔴 Draft (Private)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="row g-2">
-                <div className="col-6">
-                  <label className="text-muted mb-1 fs-8">Contact Email</label>
-                  <input
-                    type="email"
-                    value={storeForm.email}
-                    onChange={(e) => setStoreForm({ ...storeForm, email: e.target.value })}
-                    className="form-control"
+                    style={{ border: "1px solid #dfe3e8", color: "#202223", backgroundColor: "#fafbfc" }}
                   />
                 </div>
-                <div className="col-6">
-                  <label className="text-muted mb-1 fs-8">Support Phone</label>
-                  <input
-                    value={storeForm.phone}
-                    onChange={(e) => setStoreForm({ ...storeForm, phone: e.target.value })}
+
+                <div>
+                  <label className="mb-1 fs-8 fw-semibold" style={{ color: "#454f5b" }}>Subdomain Handle</label>
+                  <div className="input-group">
+                    <input
+                      value={storeForm.subdomain}
+                      onChange={(e) => setStoreForm({ ...storeForm, subdomain: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") })}
+                      className="form-control"
+                      style={{ border: "1px solid #dfe3e8", borderRight: "none", color: "#202223", backgroundColor: "#fafbfc" }}
+                    />
+                    <span className="input-group-text fs-8" style={{ backgroundColor: "#f1f2f4", border: "1px solid #dfe3e8", color: "#6d7175" }}>.storemanager.app</span>
+                  </div>
+                </div>
+
+                <div className="row g-2">
+                  <div className="col-6">
+                    <label className="mb-1 fs-8 fw-semibold" style={{ color: "#454f5b" }}>Category</label>
+                    <select
+                      value={storeForm.category}
+                      onChange={(e) => setStoreForm({ ...storeForm, category: e.target.value })}
+                      className="form-select"
+                      style={{ border: "1px solid #dfe3e8", color: "#202223", backgroundColor: "#fafbfc" }}
+                    >
+                      <option value="Fashion & Apparel">Fashion & Apparel</option>
+                      <option value="Home & Living">Home & Living</option>
+                      <option value="Beauty & Cosmetics">Beauty & Cosmetics</option>
+                      <option value="Jewelry & Luxury">Jewelry & Luxury</option>
+                      <option value="General Retail">General Retail</option>
+                    </select>
+                  </div>
+                  <div className="col-6">
+                    <label className="mb-1 fs-8 fw-semibold" style={{ color: "#454f5b" }}>Store Status</label>
+                    <select
+                      value={storeForm.status}
+                      onChange={(e) => setStoreForm({ ...storeForm, status: e.target.value })}
+                      className="form-select"
+                      style={{ border: "1px solid #dfe3e8", color: "#202223", backgroundColor: "#fafbfc" }}
+                    >
+                      <option value="Active">🟢 Active (Open for Orders)</option>
+                      <option value="Maintenance">🟡 Maintenance Mode</option>
+                      <option value="Draft">🔴 Draft (Private)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="row g-2">
+                  <div className="col-6">
+                    <label className="mb-1 fs-8 fw-semibold" style={{ color: "#454f5b" }}>Contact Email</label>
+                    <input
+                      type="email"
+                      value={storeForm.email}
+                      onChange={(e) => setStoreForm({ ...storeForm, email: e.target.value })}
+                      className="form-control"
+                      style={{ border: "1px solid #dfe3e8", color: "#202223", backgroundColor: "#fafbfc" }}
+                    />
+                  </div>
+                  <div className="col-6">
+                    <label className="mb-1 fs-8 fw-semibold" style={{ color: "#454f5b" }}>Support Phone</label>
+                    <input
+                      value={storeForm.phone}
+                      onChange={(e) => setStoreForm({ ...storeForm, phone: e.target.value })}
+                      className="form-control"
+                      style={{ border: "1px solid #dfe3e8", color: "#202223", backgroundColor: "#fafbfc" }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-1 fs-8 fw-semibold" style={{ color: "#454f5b" }}>Store Description & Mission</label>
+                  <textarea
+                    rows="3"
+                    value={storeForm.description}
+                    onChange={(e) => setStoreForm({ ...storeForm, description: e.target.value })}
                     className="form-control"
+                    style={{ border: "1px solid #dfe3e8", color: "#202223", backgroundColor: "#fafbfc" }}
                   />
                 </div>
-              </div>
 
-              <div>
-                <label className="text-muted mb-1 fs-8">Store Description & Mission</label>
-                <textarea
-                  rows="3"
-                  value={storeForm.description}
-                  onChange={(e) => setStoreForm({ ...storeForm, description: e.target.value })}
-                  className="form-control"
-                />
-              </div>
-
-              <div className="d-flex align-items-center justify-content-end gap-2 pt-2 border-top" style={{ borderColor: "rgba(212,175,55,0.15)" }}>
-                <button type="button" onClick={() => setShowEditStoreModal(false)} className="btn btn-sm btn-outline-secondary px-3 py-2">
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-gold-primary btn-sm px-4 py-2">
-                  Save Changes
-                </button>
-              </div>
-            </form>
+                <div className="d-flex align-items-center justify-content-end gap-2 pt-3 border-top mt-1" style={{ borderColor: "#dfe3e8" }}>
+                  <button type="button" onClick={() => setShowEditStoreModal(false)} className="btn btn-sm btn-light border px-3 py-2" style={{ color: "#202223", backgroundColor: "#ffffff" }}>
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-dark btn-sm px-4 py-2" style={{ backgroundColor: "#202223", color: "#ffffff", border: "none" }}>
+                    Save Changes
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}
@@ -3107,25 +3287,27 @@ export default function StoreOwnerDashboard() {
       {/* DELETE STORE CONFIRMATION MODAL */}
       {showDeleteStoreModal && (
         <div className="position-fixed top-0 bottom-0 start-0 end-0 bg-dark bg-opacity-75 d-flex align-items-center justify-content-center p-3" style={{ zIndex: 1060 }}>
-          <div className="gold-panel w-100" style={{ maxWidth: 430 }}>
-            <div className="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom" style={{ borderColor: "rgba(212,175,55,0.2)" }}>
-              <h3 className="fs-6 font-bold text-danger mb-0 d-flex align-items-center gap-2">
+          <div className="bg-white w-100 rounded-3 shadow-sm border" style={{ maxWidth: 430, borderColor: "#dfe3e8" }}>
+            <div className="d-flex align-items-center justify-content-between p-3 border-bottom" style={{ borderColor: "#dfe3e8" }}>
+              <h3 className="fs-5 font-bold mb-0 d-flex align-items-center gap-2 text-danger">
                 <AlertTriangle size={18} /> Delete Store
               </h3>
-              <button onClick={() => setShowDeleteStoreModal(false)} className="btn btn-sm text-muted p-0 border-0 bg-transparent">✕</button>
+              <button onClick={() => setShowDeleteStoreModal(false)} className="btn btn-sm p-0 border-0 bg-transparent" style={{ color: "#6d7175" }}>✕</button>
             </div>
-            <p className="fs-7 text-white mt-2 mb-3">
-              Are you sure you want to delete store <strong className="text-warning">"{activeStore?.name}"</strong>?
-              <br />
-              <span className="fs-8 text-muted">This action will remove the store workspace from your merchant dashboard.</span>
-            </p>
-            <div className="d-flex align-items-center justify-content-end gap-2 pt-2 border-top" style={{ borderColor: "rgba(212,175,55,0.15)" }}>
-              <button onClick={() => setShowDeleteStoreModal(false)} className="btn btn-sm btn-outline-secondary px-3 py-2">
-                Cancel
-              </button>
-              <button onClick={handleDeleteStoreExecute} className="btn btn-danger btn-sm px-3 py-2">
-                Delete Store
-              </button>
+            <div className="p-3">
+              <p className="fs-7 mt-2 mb-3" style={{ color: "#202223" }}>
+                Are you sure you want to delete store <strong style={{ color: "#202223" }}>"{activeStore?.name}"</strong>?
+                <br />
+                <span className="fs-8 mt-1 d-block" style={{ color: "#6d7175" }}>This action will remove the store workspace from your merchant dashboard.</span>
+              </p>
+              <div className="d-flex align-items-center justify-content-end gap-2 pt-3 border-top mt-1" style={{ borderColor: "#dfe3e8" }}>
+                <button onClick={() => setShowDeleteStoreModal(false)} className="btn btn-sm btn-light border px-3 py-2" style={{ color: "#202223", backgroundColor: "#ffffff" }}>
+                  Cancel
+                </button>
+                <button onClick={handleDeleteStoreExecute} className="btn btn-danger btn-sm px-3 py-2">
+                  Delete Store
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Minus, Plus, Trash2, ArrowLeft, ShoppingBag } from 'lucide-react';
 import { useStorefrontCart } from '../../context/StorefrontCartContext';
+import { normalizeProductImage } from '../../utils/imageUtils';
 
 export default function Cart() {
   const navigate = useNavigate();
@@ -49,13 +50,19 @@ export default function Cart() {
                   <div className="d-flex gap-3 align-items-center mb-3 mb-md-0" style={{ width: '100%', md: { width: '50%' } }}>
                     <div style={{ width: 80, height: 80 }} className="bg-light rounded overflow-hidden flex-shrink-0">
                       <img 
-                        src={item.image || item.image_url || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80'} 
+                        src={normalizeProductImage(item.image || item.image_url, item.name)} 
                         alt={item.name} 
                         className="w-100 h-100 object-fit-cover" 
                       />
                     </div>
                     <div>
-                      <h3 className="fs-6 fw-bold mb-1">{item.name}</h3>
+                      <div className="fs-6 fw-bold mb-1">{item.name}</div>
+                      {item.selectedSize && (
+                        <div className="fs-8 text-secondary mb-1">Size: {item.selectedSize}</div>
+                      )}
+                      {item.selectedColor && (
+                        <div className="fs-8 text-secondary text-capitalize">Color: {item.selectedColor}</div>
+                      )}
                       <button 
                         className="btn btn-link p-0 text-danger text-decoration-none fs-8 d-flex align-items-center gap-1"
                         onClick={() => removeFromCart(item.id)}
@@ -67,7 +74,7 @@ export default function Cart() {
 
                   <div className="d-flex justify-content-between w-100 flex-md-row align-items-center">
                     <div className="text-md-center fw-semibold" style={{ width: '15%' }}>
-                      ${Number(item.price).toFixed(2)}
+                      ₹{Number(item.price).toFixed(2)}
                     </div>
 
                     <div className="d-flex justify-content-md-center" style={{ width: '20%' }}>
@@ -89,7 +96,7 @@ export default function Cart() {
                     </div>
 
                     <div className="text-end fw-bold text-primary" style={{ width: '15%' }}>
-                      ${(Number(item.price) * item.quantity).toFixed(2)}
+                      ₹{(Number(item.price) * item.quantity).toFixed(2)}
                     </div>
                   </div>
 
@@ -114,7 +121,7 @@ export default function Cart() {
             
             <div className="d-flex justify-content-between mb-2 fs-7 text-secondary">
               <span>Subtotal</span>
-              <span>${cartTotal.toFixed(2)}</span>
+              <span>₹{cartTotal.toFixed(2)}</span>
             </div>
             <div className="d-flex justify-content-between mb-3 fs-7 text-secondary">
               <span>Shipping</span>
@@ -123,7 +130,7 @@ export default function Cart() {
             
             <div className="d-flex justify-content-between border-top pt-3 mb-4 fw-bold fs-5">
               <span>Total</span>
-              <span>${cartTotal.toFixed(2)}</span>
+              <span>₹{cartTotal.toFixed(2)}</span>
             </div>
             
             <button 

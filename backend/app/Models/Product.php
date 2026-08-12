@@ -22,6 +22,8 @@ class Product extends Model
         'image',
         'status',
         'is_active',
+        'color',
+        'size',
     ];
 
     public function store()
