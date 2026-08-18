@@ -58,6 +58,7 @@ body {
 .gold-gradient-text {
   background: linear-gradient(135deg, #f3d675 0%, #d4af37 50%, #b8860b 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -1848,3 +1849,62 @@ body {
 .admin-root .text-white {
   color: #202223 !important;
 }
+
+/* Responsive Dashboard Adjustments */
+@media (max-width: 992px) {
+  .store-sidebar {
+    position: static;
+    width: 100%;
+    height: auto;
+    min-height: auto;
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  .store-sidebar-brand {
+    display: none; /* Hide brand on mobile to save horizontal space */
+  }
+  .sidebar-nav-list {
+    flex-direction: row;
+    gap: 10px;
+    padding: 0;
+  }
+  .sidebar-link {
+    width: auto;
+    white-space: nowrap;
+    border-left: none;
+    border-bottom: 3px solid transparent;
+  }
+  .sidebar-link.active {
+    border-left: none;
+    border-bottom: 3px solid #f3d675;
+  }
+  .store-manager-layout {
+    display: flex;
+    flex-direction: column;
+  }
+  /* Adjust charts or grid layouts */
+  .gold-stat-card {
+    margin-bottom: 15px;
+  }
+}
+@media (max-width: 768px) {
+  .home-announcement-bar {
+    font-size: 0.65rem !important;
+  }
+  .btn-gold-pill {
+    padding: 0.4rem 1rem !important;
+    font-size: 0.85rem;
+  }
+  .home-card-gold {
+    padding: 1rem !important;
+  }
+  .dashboard-page {
+    padding: 10px !important;
+  }
+  .merchant-glass-card {
+    padding: 15px !important;
+  }
+}
+

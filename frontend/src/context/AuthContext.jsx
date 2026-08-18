@@ -150,6 +150,15 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const loginWithGoogle = async () => {
+    // Simulating a Google OAuth pop-up flow
+    const googleEmail = 'google_merchant@gmail.com';
+    const googleName = 'Google Merchant';
+    
+    // Automatically register/login the simulated Google user as an owner
+    return await register(googleName, googleEmail, 'google_oauth_dummy_pass', 'owner', `${googleName} Store`, 'My store imported from Google');
+  };
+
   const logout = async () => {
     try {
       await api.post('/logout');
@@ -162,7 +171,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, loginWithGoogle }}>
       {children}
     </AuthContext.Provider>
   );

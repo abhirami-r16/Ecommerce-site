@@ -1,213 +1,144 @@
-import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Minus, Plus, Trash2, ArrowLeft, ShoppingBag } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useStore } from '../context/StoreContext';
-import useSEO from '../hooks/useSEO';
 
 export default function Cart() {
-  const { cartItems, updateQuantity, removeFromCart, clearCart, cartSubtotal, placeOrder, loading } = useCart();
+  const navigate = useNavigate();
+  const { cartItems, updateQuantity, removeFromCart, cartSubtotal } = useCart();
   const { activeStore, formatPrice } = useStore();
 
-  useSEO({ title: 'Shopping Cart', description: 'Review your cart items, quantities, and proceed to checkout.' });
-
-  const [customer, setCustomer] = useState({ name: '', email: '', phone: '', address: '' });
-  const [orderSuccess, setOrderSuccess] = useState(null);
-  const [errorMsg, setErrorMsg] = useState('');
-
-  const handleCheckout = async (e) => {
-    e.preventDefault();
-    setErrorMsg('');
-    const res = await placeOrder(customer);
-    if (res.success) {
-      setOrderSuccess(res.order);
-    } else {
-      setErrorMsg(res.message);
-    }
-  };
-
-  if (orderSuccess) {
+  if (cartItems.length === 0) {
     return (
-      <div className="container py-5 text-center">
-        <div className="shopify-card p-5 border-0 shadow-lg max-w-lg mx-auto">
-          <div className="display-3 mb-3">✅</div>
-          <h2 className="fw-bold text-success mb-2">Order Confirmed!</h2>
-          <p className="lead text-muted mb-4">Order Number: <strong>{orderSuccess.order_number}</strong></p>
-          <div className="p-3 bg-light rounded text-start mb-4 border">
-            <div><strong>Store:</strong> {activeStore?.name}</div>
-            <div><strong>Total Paid:</strong> {formatPrice(orderSuccess.total_amount)}</div>
-            <div><strong>Status:</strong> <span className="badge badge-shopify-warning">Pending Processing</span></div>
+      <div className="container-fluid py-5 text-center">
+        <div className="py-5 bg-white rounded shadow-sm border border-light">
+          <div className="d-inline-flex align-items-center justify-content-center bg-light rounded-circle mb-4" style={{ width: 80, height: 80 }}>
+            <ShoppingBag size={40} className="text-muted" />
           </div>
-          <NavLink to="/" className="btn btn-shopify py-2.5 px-4 fw-bold">
-            Return to Storefront
-          </NavLink>
+          <h2 className="fs-3 font-bold mb-3">Your cart is empty</h2>
+          <p className="text-secondary mb-4">Looks like you haven't added anything to your cart yet.</p>
+          <button className="btn btn-primary px-4 py-2" onClick={() => navigate('/')}>
+            Continue Shopping
+          </button>
         </div>
       </div>
     );
   }
 
+  const handleCheckout = () => {
+    navigate('/checkout'); // or whatever the global checkout path is
+  };
+
   return (
-    <div className="container-fluid p-0">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h2 className="fw-bold text-dark m-0">Shopping Cart</h2>
-          <p className="text-muted fs-7 m-0">Review items & checkout for <strong>{activeStore?.name}</strong></p>
+    <div className="container-fluid py-5 p-0">
+      <h1 className="fs-2 font-bold mb-4">Shopping Cart</h1>
+
+      <div className="row g-4">
+        <div className="col-lg-8">
+          <div className="bg-white rounded shadow-sm border border-light p-4">
+            <div className="d-flex justify-content-between border-bottom pb-3 mb-4 d-none d-md-flex text-muted fs-8 text-uppercase fw-bold">
+              <div style={{ width: '50%' }}>Product</div>
+              <div className="text-center" style={{ width: '15%' }}>Price</div>
+              <div className="text-center" style={{ width: '20%' }}>Quantity</div>
+              <div className="text-end" style={{ width: '15%' }}>Total</div>
+            </div>
+
+            <div className="d-flex flex-column gap-4">
+              {cartItems.map(item => (
+                <div key={item.id} className="d-flex flex-column flex-md-row align-items-md-center justify-content-between border-bottom pb-4">
+                  
+                  <div className="d-flex gap-3 align-items-center mb-3 mb-md-0" style={{ width: '100%', md: { width: '50%' } }}>
+                    <div style={{ width: 80, height: 80 }} className="bg-light rounded overflow-hidden flex-shrink-0">
+                      <img 
+                        src={item.product?.image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=150&q=80'}
+                        alt={item.product?.name} 
+                        className="w-100 h-100 object-fit-cover" 
+                      />
+                    </div>
+                    <div>
+                      <div className="fs-6 fw-bold mb-1">{item.product?.name}</div>
+                      <div className="fs-8 text-secondary mb-1">SKU: {item.product?.sku}</div>
+                      <button 
+                        className="btn btn-link p-0 text-danger text-decoration-none fs-8 d-flex align-items-center gap-1"
+                        onClick={() => removeFromCart(item.id)}
+                      >
+                        <Trash2 size={12} /> Remove
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="d-flex justify-content-between w-100 flex-md-row align-items-center">
+                    <div className="text-md-center fw-semibold" style={{ width: '15%' }}>
+                      {formatPrice ? formatPrice(item.price) : `₹${Number(item.price).toFixed(2)}`}
+                    </div>
+
+                    <div className="d-flex justify-content-md-center" style={{ width: '20%' }}>
+                      <div className="d-flex align-items-center border rounded">
+                        <button 
+                          className="btn btn-sm px-2 py-1 border-0" 
+                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        >
+                          <Minus size={14} />
+                        </button>
+                        <span className="px-2 fs-7 fw-semibold">{item.quantity}</span>
+                        <button 
+                          className="btn btn-sm px-2 py-1 border-0"
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        >
+                          <Plus size={14} />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="text-end fw-bold text-primary" style={{ width: '15%' }}>
+                      {formatPrice ? formatPrice(item.price * item.quantity) : `₹${(Number(item.price) * item.quantity).toFixed(2)}`}
+                    </div>
+                  </div>
+
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4 pt-3">
+              <button 
+                className="btn btn-link text-decoration-none text-secondary d-flex align-items-center gap-2 p-0"
+                onClick={() => navigate('/')}
+              >
+                <ArrowLeft size={16} /> Continue Shopping
+              </button>
+            </div>
+          </div>
         </div>
-        {cartItems.length > 0 && (
-          <button className="btn btn-sm btn-outline-danger" onClick={clearCart}>
-            Clear Cart
-          </button>
-        )}
+
+        <div className="col-lg-4">
+          <div className="bg-white rounded shadow-sm border border-light p-4 position-sticky" style={{ top: '20px' }}>
+            <h3 className="fs-5 fw-bold border-bottom pb-3 mb-3">Order Summary</h3>
+            
+            <div className="d-flex justify-content-between mb-2 fs-7 text-secondary">
+              <span>Subtotal</span>
+              <span>{formatPrice ? formatPrice(cartSubtotal) : `₹${cartSubtotal.toFixed(2)}`}</span>
+            </div>
+            <div className="d-flex justify-content-between mb-3 fs-7 text-secondary">
+              <span>Shipping</span>
+              <span className="text-success">Free</span>
+            </div>
+            
+            <div className="d-flex justify-content-between border-top pt-3 mb-4 fw-bold fs-5">
+              <span>Total</span>
+              <span>{formatPrice ? formatPrice(cartSubtotal) : `₹${cartSubtotal.toFixed(2)}`}</span>
+            </div>
+            
+            <button 
+              className="btn w-100 py-3 fw-bold text-white fs-6" 
+              style={{ backgroundColor: '#fb641b' }}
+              onClick={handleCheckout}
+            >
+              Proceed to Checkout
+            </button>
+          </div>
+        </div>
       </div>
-
-      {cartItems.length === 0 ? (
-        <div className="shopify-card p-5 text-center">
-          <div className="display-3 text-muted mb-3">🛒</div>
-          <h4 className="fw-bold text-dark">Your cart is empty</h4>
-          <p className="text-muted fs-7 mb-4">Browse storefront products to add items to your cart.</p>
-          <NavLink to="/" className="btn btn-shopify">
-            Explore Storefront ↗
-          </NavLink>
-        </div>
-      ) : (
-        <div className="row g-4">
-          {/* Cart Table */}
-          <div className="col-12 col-lg-8">
-            <div className="shopify-card p-4">
-              <div className="table-responsive">
-                <table className="shopify-table">
-                  <thead>
-                    <tr>
-                      <th>Product</th>
-                      <th>Price</th>
-                      <th className="text-center">Quantity</th>
-                      <th className="text-end">Subtotal</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {cartItems.map((item) => (
-                      <tr key={item.id}>
-                        <td>
-                          <div className="d-flex align-items-center gap-3">
-                            <img
-                              src={item.product?.image || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=150&q=80'}
-                              alt={item.product?.name}
-                              className="rounded border"
-                              style={{ width: '56px', height: '56px', objectFit: 'cover' }}
-                            />
-                            <div>
-                              <div className="fw-bold text-dark">{item.product?.name}</div>
-                              <div className="fs-8 text-muted">SKU: {item.product?.sku}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="fw-bold text-dark">{formatPrice(item.price)}</td>
-                        <td className="text-center">
-                          <div className="input-group input-group-sm mx-auto" style={{ width: '100px' }}>
-                            <button
-                              className="btn btn-outline-secondary"
-                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                            >-</button>
-                            <span className="input-group-text bg-white fw-bold">{item.quantity}</span>
-                            <button
-                              className="btn btn-outline-secondary"
-                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                            >+</button>
-                          </div>
-                        </td>
-                        <td className="fw-bold text-success text-end">{formatPrice(item.price * item.quantity)}</td>
-                        <td className="text-end">
-                          <button className="btn btn-sm btn-link text-danger p-0 text-decoration-none" onClick={() => removeFromCart(item.id)}>
-                            🗑️
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-
-          {/* Checkout Panel */}
-          <div className="col-12 col-lg-4">
-            <div className="shopify-card p-4">
-              <h5 className="fw-bold text-dark mb-3">Order Summary</h5>
-
-              {errorMsg && <div className="alert alert-danger py-2 fs-7 mb-3">{errorMsg}</div>}
-
-              <form onSubmit={handleCheckout}>
-                <div className="mb-2">
-                  <label className="form-label fs-8 fw-bold text-uppercase text-muted">Customer Name *</label>
-                  <input
-                    type="text"
-                    className="form-control form-control-sm"
-                    required
-                    placeholder="Full Name"
-                    value={customer.name}
-                    onChange={(e) => setCustomer({ ...customer, name: e.target.value })}
-                  />
-                </div>
-
-                <div className="mb-2">
-                  <label className="form-label fs-8 fw-bold text-uppercase text-muted">Email *</label>
-                  <input
-                    type="email"
-                    className="form-control form-control-sm"
-                    required
-                    placeholder="email@example.com"
-                    value={customer.email}
-                    onChange={(e) => setCustomer({ ...customer, email: e.target.value })}
-                  />
-                </div>
-
-                <div className="mb-2">
-                  <label className="form-label fs-8 fw-bold text-uppercase text-muted">Phone *</label>
-                  <input
-                    type="text"
-                    className="form-control form-control-sm"
-                    required
-                    placeholder="+1 (555) 000-0000"
-                    value={customer.phone}
-                    onChange={(e) => setCustomer({ ...customer, phone: e.target.value })}
-                  />
-                </div>
-
-                <div className="mb-3">
-                  <label className="form-label fs-8 fw-bold text-uppercase text-muted">Shipping Address *</label>
-                  <textarea
-                    className="form-control form-control-sm"
-                    rows="2"
-                    required
-                    placeholder="Address..."
-                    value={customer.address}
-                    onChange={(e) => setCustomer({ ...customer, address: e.target.value })}
-                  ></textarea>
-                </div>
-
-                <div className="p-3 bg-light rounded border mb-3 fs-7">
-                  <div className="d-flex justify-content-between mb-1">
-                    <span>Subtotal:</span>
-                    <span>{formatPrice(cartSubtotal)}</span>
-                  </div>
-                  <div className="d-flex justify-content-between mb-1">
-                    <span>Est. Tax (5%):</span>
-                    <span>{formatPrice(cartSubtotal * 0.05)}</span>
-                  </div>
-                  <div className="d-flex justify-content-between fw-bold pt-2 border-top fs-6">
-                    <span>Total:</span>
-                    <span className="text-success">{formatPrice(cartSubtotal * 1.05)}</span>
-                  </div>
-                </div>
-
-                <button type="submit" className="btn btn-shopify w-100 py-2.5 fw-bold" disabled={loading}>
-                  {loading ? 'Processing...' : 'Complete Checkout'}
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

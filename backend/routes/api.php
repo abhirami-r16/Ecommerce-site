@@ -11,7 +11,9 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\Auth\GoogleController;
 
 // Public Health Check
 Route::get('/health', function () {
@@ -23,6 +25,8 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout']);
 Route::get('/me', [AuthController::class, 'me']);
+
+Route::post('/auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
 
 // Dashboard
 Route::get('/dashboard', [DashboardController::class, 'index']);
